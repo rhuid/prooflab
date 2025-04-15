@@ -1,0 +1,70 @@
+
+ID := λx.x
+
+# constant function returning y: λx.y
+
+# The main operation in lambda calculus is beta reduction which is essentially function application.
+
+# When you see (λ.M) N
+# 1. Take the body M
+# 2. Replace all x's in M with N
+# 3. The result is the new expression
+# Example: ID y -> (λx.x) y -> y 
+
+# Parentheses matter: λx.xy is different from (λx.x)y
+# Functions can only take one argument at a time
+# To handle multiple arguments, we use nested functions: λx.λy.x
+# Variables can be renamed (this is called alpha conversion): λx.x is the same as λy.y
+
+# Pure untyped lambda calculus is one of the simplest Turing-complete systems ever discovered, consisting of just three fundamental concepts:
+# 1. Variables: x, y, z, etc.
+# 2. Abstractions (function creation): λx.M
+# 3. Applications (function calls): (M N)
+
+# Key properties:
+# 1. No primitive data types (no numbers, booleans, etc.)
+# 2. No built-in operations (no arithmetic, no I/O)
+# 3. Everything is a function
+# 4. Computation happens through β-reduction (substitution)
+
+# +-----------------+
+# | Church numerals |
+# +-----------------+
+
+Since lambda calculus has no numbers, we represent them as functions that apply other functions a certain number of times.
+
+0 := λf.λx.x
+1 := λf.λx.f x
+2 := λf.λx.f (f x)
+3 := λf.λx.f (f (f x))
+4 := λf.λx.f (f (f (f x)))
+
+# Basic arithmetic operations
+# Like successor, add, multiply
+
+SUCC := λn.λf.λx.f (n f x)
+ADD  := λm.λn.λf.λx.m f (n f x)
+MULT := λm.λn.λf.m (n f)
+
+PRED := λn.λf.λx. n (λg.λh.h g) (λu.x) (λu.u)           # Kleene's predecessor function
+
+# +----------+
+# | Booleans |
+# +----------+
+
+TRUE := λx.λy.x       # select first argument
+FALSE := λx.λy.y      # select second argument
+
+IF := λp.λa.λb.p a b  # if-then-else
+
+NOT := λp.λa.λb.p b a
+AND := 
+
+# Examples
+
+IF TRUE A B -> (λp.λa.λb.p a b) (λx.λy.x) A B -> (λx.λy.x) A B -> A
+IF FALSE A B -> (λp.λa.λb.p a b) (λx.λy.y) A B -> (λx.λy.y) A B -> B
+
+NOT TRUE -> (λp.λa.λb.p b a) TRUE -> λa.λb.TRUE b a -> λa.λb.b == FALSE
+AND TRUE TRUE -> 
+
