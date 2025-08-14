@@ -77,3 +77,26 @@ example (a b : Prop) : a ∧ b → b ∧ a := by
 example (a b : Prop) : a ∧ b → b ∧ a := by
   intro hab
   exact ⟨And.right hab, And.left  hab⟩
+
+-- Proving propositions involving disjunctions
+-- `Or.inl` and `Or.inr` give hypotheses for a ∨ b from hypotheses for a and b respectively
+
+example (a b : Prop) : a → a ∨ b := by
+  intro ha
+  exact Or.inl ha
+
+-- `left` and `right` can also be used to construct hypothesis for a ∨ b
+-- For instance, the same proof above may be rewritten as
+
+example (a b : Prop) : a → a ∨ b := by
+  intro ha
+  left
+  exact ha
+
+-- `cases` may be used to deconstruct hypothesis for a ∨ b
+
+example (a b : Prop) : a ∨ b → b ∨ a := by
+  intro hab
+  cases hab with
+    | inl ha => exact Or.inr ha
+    | inr hb => exact Or.inl hb
