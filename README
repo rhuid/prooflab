@@ -1,9 +1,0 @@
-+--------+
-| Lamina |
-+--------+
-
---- currently under development ---
-
-Lamina (Lambda + Machina) is a machine (interpreter and evaluator) for lambda calculus.
-
-Current features: only handles beta reductions for now.
