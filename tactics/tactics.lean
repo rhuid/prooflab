@@ -111,6 +111,16 @@ example (a b c : Prop) : (a ∧ b) ∧ c → a ∧ (b ∧ c) := by
   have hc : c := And.right habc
   exact And.intro ha (And.intro hb hc)
 
+-- Proving associativity (for disjunction)
+
+example (a b c : Prop) : (a ∨ b) ∨ c → a ∨ (b ∨ c) := by
+  intro habc
+  cases habc with
+  | inl hab =>
+    cases hab with
+    | inl ha => exact Or.inl ha
+    | inr hb => exact Or.inr (Or.inl hb)
+  | inr hc => exact Or.inr (Or.inr hc)
 
 -- Proving the distributive law
 
