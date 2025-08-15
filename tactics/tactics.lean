@@ -101,7 +101,6 @@ example (a b : Prop) : a ∨ b → b ∨ a := by
     | inl ha => exact Or.inr ha
     | inr hb => exact Or.inl hb
 
-
 -- Proving associativity (for conjunction)
 
 example (a b c : Prop) : (a ∧ b) ∧ c → a ∧ (b ∧ c) := by
@@ -148,6 +147,21 @@ example (a b c : Prop) : (a ∧ b) ∨ (a ∧ c) → a ∧ (b ∨ c) := by
       have hc : c := And.right hac
       exact And.intro ha (Or.inr hc)
 
+-- Proving (a → b) ∧ (a → c) → a → b ∧ c
+
+example (a b c : Prop) : (a → b) ∧ (a → c) → a → b ∧ c := by
+  intro habac ha
+  have hb : b := And.left habac ha
+  have hc : c := And.right habac ha
+  exact ⟨hb, hc⟩
+
+-- Proving (a → c) ∧ (b → c) → a ∨ b → c
+
+example (a b c : Prop) : (a → c) ∧ (b → c) → a ∨ b → c := by
+  intro hacbc hab
+  cases hab with
+    | inl ha => exact And.left hacbc ha
+    | inr hb => exact And.right hacbc hb
 
 
 -- Proving the law of excluded middle
