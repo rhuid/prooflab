@@ -102,6 +102,14 @@ example (a b : Prop) : a ∨ b → b ∨ a := by
     | inr hb => exact Or.inl hb
 
 
+-- Proving associativity (for conjunction)
+
+example (a b c : Prop) : (a ∧ b) ∧ c → a ∧ (b ∧ c) := by
+  intro habc
+  have ha : a := And.left (And.left habc)
+  have hb : b := And.right (And.left habc)
+  have hc : c := And.right habc
+  exact And.intro ha (And.intro hb hc)
 
 
 -- Proving the distributive law
