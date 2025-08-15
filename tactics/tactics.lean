@@ -72,7 +72,7 @@ example (a b : Prop) : a ∧ b → b ∧ a := by
   intro hab
   exact And.intro (And.right hab) (And.left hab)
 
--- More succinctly,... using <·>
+-- Even more succinctly,... using <·>
 
 example (a b : Prop) : a ∧ b → b ∧ a := by
   intro hab
@@ -85,7 +85,7 @@ example (a b : Prop) : a → a ∨ b := by
   intro ha
   exact Or.inl ha
 
--- `left` and `right` can also be used to construct hypothesis for a ∨ b
+-- `left` and `right` can also be used to prove left and right sides of the disjunction
 -- For instance, the same proof above may be rewritten as
 
 example (a b : Prop) : a → a ∨ b := by
@@ -93,10 +93,45 @@ example (a b : Prop) : a → a ∨ b := by
   left
   exact ha
 
--- `cases` may be used to deconstruct hypothesis for a ∨ b
+-- `cases` may be used to perform case analysis on disjunction
 
 example (a b : Prop) : a ∨ b → b ∨ a := by
   intro hab
   cases hab with
     | inl ha => exact Or.inr ha
     | inr hb => exact Or.inl hb
+
+
+
+
+-- Proving the distributive law
+
+example (a b c : Prop) : a ∧ (b ∨ c) → (a ∧ b) ∨ (a ∧ c) := by
+  intro habc
+  have ha : a := And.left habc
+  have hbc : b ∨ c := And.right habc
+  cases hbc with
+    | inl hleft =>
+      left
+      exact And.intro ha hleft
+    | inr hright =>
+      right
+      exact And.intro ha hright
+
+example (a b c : Prop) : (a ∧ b) ∨ (a ∧ c) → a ∧ (b ∨ c) := by
+  intro habac
+  cases habac with
+    | inl hab =>
+      have ha : a := And.left hab
+      have hb : b := And.right hab
+      exact And.intro ha (Or.inl hb)
+    | inr hac =>
+      have ha : a := And.left hac
+      have hc : c := And.right hac
+      exact And.intro ha (Or.inr hc)
+
+
+
+-- Proving the law of excluded middle
+
+-- example (a : Prop) : a ∨ ¬a := by
