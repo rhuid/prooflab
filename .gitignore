@@ -1,5 +1,5 @@
 *~
-lambda-calc-mode
+lambda-calc-mode/
 dist
 dist-*
 cabal-dev
