@@ -42,6 +42,25 @@ theorem and_assoc' : (a ∧ b) ∧ c → a ∧ (b ∧ c) :=
   have hc : c := And.right habc
   ⟨ha, ⟨hb, hc⟩⟩
 
+-- `cases` won't work, use `match` instead for pattern matching
+example : (a → c) ∧ (b → c) → a ∨ b → c :=
+  fun hacbc hab =>
+  match hab with
+  | Or.inl ha => And.left hacbc ha
+  | Or.inr hb => And.right hacbc hb
+
+-- `.elim` (eliminator) can also be used instead of `match`
+-- Distributivity: ∧ distributes over ∨
+theorem and_or_dist : a ∧ (b ∨ c) → (a ∧ b) ∨ (a ∧ c) :=
+  fun habc =>
+  have ha : a := And.left habc
+  have hbc : b ∨ c := And.right habc
+  Or.elim hbc
+    (fun hb => Or.inl (And.intro ha hb))
+    (fun hc => Or.inr (And.intro ha hc))
+
+
+
 end
 
 /-
@@ -51,5 +70,6 @@ Tactic mode vs. Term mode
 `intro`         `fun`
 `have`          `have`
 `exact`         `show` `from`
+`cases`         `match` or `.elim`
 
 -/
