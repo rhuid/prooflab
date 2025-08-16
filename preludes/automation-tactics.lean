@@ -28,4 +28,6 @@ example : _natToString (2 + 2) = "four" := by rfl
 
 example (a b : Nat) : a + b = b + a := by ac_rfl
 
--- example (a b : Prop) : a ∧ b → b ∧ a := by ac_rfl
+-- `simp` simplifies both sides of the equation using known lemmas
+
+example {α : Type} (xs : List α) : List.reverse (List.reverse xs) = xs := by simp
