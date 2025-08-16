@@ -30,4 +30,39 @@ example (a b : Nat) : a + b = b + a := by ac_rfl
 
 -- `simp` simplifies both sides of the equation using known lemmas
 
-example {α : Type} (xs : List α) : List.reverse (List.reverse xs) = xs := by simp
+example (α : Type) (xs : List α) : List.reverse (List.reverse xs) = xs := by simp
+
+-- `rw` rewrites the goals using lemmas and results which are munaully given
+
+example (a b c : Nat) (h : a = b) : a + c = b + c := by rw [h]
+
+example (a b c d : Nat) (hab : a = b) (hbc : b = c) (hcd : c = d) :
+    a = d :=
+by
+  rw [hab]
+  rw [hbc]
+  exact hcd
+
+-- The same proof above can written more concisely (by combining multible rw) as
+
+example (a b c d : Nat) (hab : a = b) (hbc : b = c) (hcd : c = d) :
+    a = d :=
+by
+  rw [hab, hbc, hcd]
+
+namespace TempSpace
+
+opaque m : Nat
+opaque n : Nat
+opaque k : Nat
+
+axiom mn_equal : m = n
+
+@[simp]
+theorem nk_equation : n = k + 2 := by sorry
+
+example : m + 2 = k + 4 := by simp [mn_equal]
+
+example : m + 2 = k + 4 := by rw [mn_equal, nk_equation]
+
+end TempSpace
