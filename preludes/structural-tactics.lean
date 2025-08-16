@@ -1,3 +1,4 @@
+
 /-
 
 ++++++++++++++++++++++
@@ -171,5 +172,51 @@ example (a b c : Prop) : (a → c) ∧ (b → c) → a ∨ b → c := by
   cases hab with
     | inl ha => exact And.left hacbc ha
     | inr hb => exact And.right hacbc hb
+
+-- Proving ((a → b) → a) → a
+-- The proof involves the law of the excluded middle
+-- Classic logic is used as constructive mathematics is unable to do the proof
+-- `Classical.em` allows using the law of the excluded middle
+
+open Classical in
+example (a b : Prop) : ((a → b) → a) → a := by
+  intro h
+  cases em a with
+    | inl ha  =>
+      exact ha
+    | inr hna =>
+      apply h
+      intro ha
+      contradiction
+
+-- The same above proof may be rewritten using `by_cases`
+
+open Classical in
+example (a b : Prop) : ((a → b) → a) → a := by
+  intro h
+  by_cases ha : a
+  case pos => exact ha
+  case neg =>
+    apply h
+    intro ha'
+    contradiction
+
+-- The same proof may be rewritten more succinctly using dot (.) syntax
+-- The dot (.) marks each case branch
+
+open Classical in
+example (a b : Prop) : ((a → b) → a) → a := by
+  intro h
+  by_cases ha : a
+  . exact ha
+  . apply h
+    intro ha'
+    contradiction
+
+
+
+
+-- example (a : Prop) : a → ¬¬a := by
+--   intro ha
 
 -- Let's do more later...
