@@ -1,0 +1,10 @@
+name = "prooflab"
+version = "0.1.0"
+defaultTargets = ["prooflab"]
+
+[[lean_lib]]
+name = "Prooflab"
+
+[[lean_exe]]
+name = "prooflab"
+root = "Main"
