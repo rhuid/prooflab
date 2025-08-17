@@ -35,12 +35,16 @@ example : (a → b) → (b → c) → (a → c) :=
 example : a → a ∨ b :=
   fun ha => Or.inl ha
 
-theorem and_assoc' : (a ∧ b) ∧ c → a ∧ (b ∧ c) :=
+example : (a ∧ b) ∧ c → a ∧ (b ∧ c) :=
   fun habc =>
   have ha : a := And.left (And.left habc)
   have hb : b := And.right (And.left habc)
   have hc : c := And.right habc
   ⟨ha, ⟨hb, hc⟩⟩
+
+-- The above can be written so concisely using pattern matching and type inference as follows
+theorem and_assoc' : (a ∧ b) ∧ c → a ∧ (b ∧ c) :=
+  fun ⟨⟨ha, hb⟩, hc⟩ => ⟨ha, ⟨hb, hc⟩⟩
 
 -- `cases` won't work, use `match` instead for pattern matching
 example : (a → c) ∧ (b → c) → a ∨ b → c :=
@@ -51,15 +55,13 @@ example : (a → c) ∧ (b → c) → a ∨ b → c :=
 
 -- `.elim` (eliminator) can also be used instead of `match`
 -- Distributivity: ∧ distributes over ∨
-theorem and_or_dist : a ∧ (b ∨ c) → (a ∧ b) ∨ (a ∧ c) :=
+theorem and_or_dist' : a ∧ (b ∨ c) → (a ∧ b) ∨ (a ∧ c) :=
   fun habc =>
-  have ha : a := And.left habc
-  have hbc : b ∨ c := And.right habc
+  have ha : a := habc.left         -- `habc.left` is the same as `And.left habc`
+  have hbc : b ∨ c := habc.right
   Or.elim hbc
-    (fun hb => Or.inl (And.intro ha hb))
-    (fun hc => Or.inr (And.intro ha hc))
-
-
+    (fun hb => Or.inl ⟨ha, hb⟩)
+    (fun hc => Or.inr ⟨ha, hc⟩)
 
 end
 
