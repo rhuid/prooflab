@@ -211,12 +211,5 @@ example (a b : Prop) : ((a → b) → a) → a := by
   . exact ha
   . apply h
     intro ha'
-    contradiction
-
-
-
-
--- example (a : Prop) : a → ¬¬a := by
---   intro ha
 
 -- Let's do more later...
