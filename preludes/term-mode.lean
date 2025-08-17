@@ -63,6 +63,50 @@ theorem and_or_dist' : a ∧ (b ∨ c) → (a ∧ b) ∨ (a ∧ c) :=
     (fun hb => Or.inl ⟨ha, hb⟩)
     (fun hc => Or.inr ⟨ha, hc⟩)
 
+-- Proving existential propositions
+-- `Exists.intro` constructs, `Exists.elim` deconstructs
+
+theorem greater_than_zero : ∃ x : Nat, x > 0 :=
+  Exists.intro 5 (by decide)
+
+example : ∃ x : Nat, (x > 0) ∧ (x % 2 == 0) :=
+  Exists.intro 4 ⟨(by decide), (by rfl)⟩
+
+example (ha : a) : ∃ x : Prop, x ∧ a :=
+  Exists.intro (∃ x : Nat, x > 0) ⟨greater_than_zero, ha⟩
+
+-- Swapping existentials
+example (α : Type) (p q : α → Prop) :
+    (∃ x, p x ∧ q x) → (∃ x, q x ∧ p x) :=
+by
+  intro h
+  apply Exists.elim h
+  intro a hpaqa
+  apply Exists.intro a
+  exact ⟨hpaqa.right, hpaqa.left⟩
+
+-- From ∃ to ∀
+example (α : Type) (p : α → Prop) :
+    (∃ x, p x) → ¬ (∀ x, ¬ p x) :=
+by
+  intro hpₑ hpₐ
+  apply Exists.elim hpₑ
+  intro a hpx
+  have hpx' := hpₐ a             -- apply the universal here
+  contradiction
+
+-- Combining existentials
+example (α : Type) (p q : α → Prop) :
+    (∃ x, p x) → (∃ x, q x) → ∃ x y, p x ∧ q y :=
+by
+  intro hp hq
+  apply Exists.elim hp
+  intro a hpa
+  apply Exists.elim hq
+  intro b hqb
+  exists a b
+  exact ⟨hpa, hqb⟩
+
 end
 
 /-
