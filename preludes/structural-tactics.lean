@@ -211,5 +211,53 @@ example (a b : Prop) : ((a → b) → a) → a := by
   . exact ha
   . apply h
     intro ha'
+    contradiction
+
+-- Proving existential propositions
+-- `Exists.intro` constructs, `Exists.elim` deconstructs
+
+-- Swapping existentials
+example (α : Type) (p q : α → Prop) :
+    (∃ x, p x ∧ q x) → (∃ x, q x ∧ p x) :=
+by
+  intro h
+  apply Exists.elim h
+  intro a hpaqa
+  apply Exists.intro a
+  exact ⟨hpaqa.right, hpaqa.left⟩
+
+-- From ∃ to ∀
+example (α : Type) (p : α → Prop) :
+    (∃ x, p x) → ¬ (∀ x, ¬ p x) :=
+by
+  intro hpₑ hpₐ
+  apply Exists.elim hpₑ
+  intro a hpx
+  have hpx' := hpₐ a             -- apply the universal here
+  contradiction
+
+-- Combining existentials
+example (α : Type) (p q : α → Prop) :
+    (∃ x, p x) → (∃ x, q x) → ∃ x y, p x ∧ q y :=
+by
+  intro hp hq
+  apply Exists.elim hp
+  intro a hpa
+  apply Exists.elim hq
+  intro b hqb
+  apply Exists.intro a
+  apply Exists.intro b
+  exact ⟨hpa, hqb⟩
+
+-- Proofs by induction
+
+example (n : Nat) :
+    add 0 n = n :=
+by
+  induction n with
+  | zero => rfl
+  | succ k' ih => simp [add, ih]
+
+-- need tweaks on the induction
 
 -- Let's do more later...
