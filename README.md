@@ -1,4 +1,4 @@
-## ProofLab
+## Prooflab
 
 > An experimental workspace for interactive theorem proving
 
