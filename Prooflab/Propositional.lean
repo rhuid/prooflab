@@ -11,9 +11,9 @@ theorem and_assoc' : (a ∧ b) ∧ c → a ∧ (b ∧ c) :=
   fun ⟨⟨ha, hb⟩, hc⟩ => ⟨ha, ⟨hb, hc⟩⟩
 
 theorem and_or_dist' : a ∧ (b ∨ c) → (a ∧ b) ∨ (a ∧ c) :=
-  fun habc =>
-  Or.elim habc.right
-    (fun hb => Or.inl ⟨habc.left, hb⟩)
-    (fun hc => Or.inr ⟨habc.left, hc⟩)
+  fun ⟨ha, hbc⟩ =>
+  Or.elim hbc
+    (fun hb => Or.inl ⟨ha, hb⟩)
+    (fun hc => Or.inr ⟨ha, hc⟩)
 
 end Prooflab.Propositional
