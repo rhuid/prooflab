@@ -56,7 +56,7 @@ example : (a → c) ∧ (b → c) → a ∨ b → c :=
 -- `.elim` (eliminator) can also be used instead of `match`
 -- Distributivity: ∧ distributes over ∨
 theorem and_or_dist' : a ∧ (b ∨ c) → (a ∧ b) ∨ (a ∧ c) :=
-  fun habc =>
+  fun habc : a ∧ (b ∨ c) =>
   have ha : a := habc.left         -- `habc.left` is the same as `And.left habc`
   have hbc : b ∨ c := habc.right
   Or.elim hbc

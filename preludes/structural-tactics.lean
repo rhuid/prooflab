@@ -278,22 +278,35 @@ theorem Natural.add_zero (n : Natural) : n + Natural.zero = n := by
   | zero      => rfl
   | succ k ih => simp [Natural.add, ih]
 
+theorem Natural.add_succ (m n : Natural) : m + succ n = succ (m + n) := by
+  induction m with
+  | zero      => simp [Natural.zero_add]
+  | succ k ih => simp [Natural.add, ih]
+
 -- Proving our addition is commutative
 
 theorem Natural.add_comm (m n : Natural) : m + n = n + m := by
   induction m with
   | zero      => simp [Natural.zero_add, Natural.add_zero]
-  | succ k ih =>
-    simp [Natural.add]
-    rfl
+  | succ k ih => simp [Natural.add, Natural.add_succ, ih]
 
--- simp [Natural.add]
+-- Proving our addition is associative
 
+example (m n k : Natural) : (m + n) + k = m + (n + k) := by
+  induction k with
+  | zero       => simp [Natural.add, Natural.add_zero]
+  | succ k' ih => simp [Natural.add_succ, ih]
 
+-- Induction using pattern matching and recursion
 
+theorem Natural.add_assoc : ∀ m n k : Natural, (m + n) + k = m + (n + k)
+  | _, _, .zero    => by simp [Natural.add, Natural.add_zero]
+  | _, _, .succ k' => by simp [Natural.add_succ, Natural.add_assoc _ _ k']
 
 -- #eval Natural.succ .zero + Natural.succ .zero
 -- #eval Natural.succ (.succ .zero)
+
+
 
 end
 
