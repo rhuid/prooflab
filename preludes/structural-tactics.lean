@@ -251,12 +251,59 @@ by
 
 -- Proofs by induction
 
-example (n : Nat) :
-    add 0 n = n :=
-by
+section
+
+-- First let's build natural numbers
+
+inductive Natural where
+| zero
+| succ : Natural → Natural
+
+-- Addition for natural numbers using recursion
+
+def Natural.add : Natural → Natural → Natural
+| zero,   n => n
+| succ k, n => succ (Natural.add k n)
+
+-- An infix (non-associative) operator for our addition
+
+infix:55 " + " => Natural.add
+
+-- Some preliminary proofs (we will need them later)
+
+theorem Natural.zero_add (n : Natural) : Natural.zero + n = n := by rfl
+
+theorem Natural.add_zero (n : Natural) : n + Natural.zero = n := by
   induction n with
-  | zero => rfl
-  | succ k' ih => simp [add, ih]
+  | zero      => rfl
+  | succ k ih => simp [Natural.add, ih]
+
+-- Proving our addition is commutative
+
+theorem Natural.add_comm (m n : Natural) : m + n = n + m := by
+  induction m with
+  | zero      => simp [Natural.zero_add, Natural.add_zero]
+  | succ k ih =>
+    simp [Natural.add]
+    rfl
+
+-- simp [Natural.add]
+
+
+
+
+-- #eval Natural.succ .zero + Natural.succ .zero
+-- #eval Natural.succ (.succ .zero)
+
+end
+
+
+-- example (n : Nat) :
+--     add 0 n = n :=
+-- by
+--   induction n with
+--   | zero => rfl
+--   | succ k' ih => simp [add, ih]
 
 -- need tweaks on the induction
 
