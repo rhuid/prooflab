@@ -30,7 +30,7 @@ by
   apply ha
 
 -- Without using ∀ notation
--- `exact`
+-- `exact
 
 example (a b : Prop) : a → b → a := by
   intro ha hb
@@ -53,7 +53,7 @@ example (a b : Prop) : (a → b) → a → b := by
 
 example (a b c : Prop) : (a → b) → (b → c) → (a → c) := by
   intro hab hbc ha
-  have  hb : b := hab ha
+  have  hb := hab ha
   exact hbc hb
 
 -- Proving propositions involving conjunctions
@@ -80,7 +80,19 @@ example (a b : Prop) : a ∧ b → b ∧ a := by
 
 example (a b : Prop) : a ∧ b → b ∧ a := by
   intro hab
-  exact And.intro (And.right hab) (And.left hab)
+  apply And.intro
+  { apply And.right hab }
+  apply And.left hab
+  -- exact And.intro (And.right hab) (And.left hab)
+
+example (a b : Prop) : a → b → (a ∧ b) := by
+  intro ha hb
+  apply And.intro
+  exact ha
+  exact hb
+
+#check And.intro
+
 
 -- Even more succinctly,... using <·>
 
@@ -179,7 +191,7 @@ example (a b c : Prop) : (a → c) ∧ (b → c) → a ∨ b → c := by
 -- `Classical.em` allows using the law of the excluded middle
 
 open Classical in
-example (a b : Prop) : ((a → b) → a) → a := by
+example (a b : Prop):  ((a → b) → a) → a := by
   intro h
   cases em a with
     | inl ha  =>
@@ -248,76 +260,3 @@ by
   apply Exists.intro a
   apply Exists.intro b
   exact ⟨hpa, hqb⟩
-
--- Proofs by induction
-
-section
-
--- First let's build natural numbers
-
-inductive Natural where
-| zero
-| succ : Natural → Natural
-
--- Addition for natural numbers using recursion
-
-def Natural.add : Natural → Natural → Natural
-| zero,   n => n
-| succ k, n => succ (Natural.add k n)
-
--- An infix (non-associative) operator for our addition
-
-infix:55 " + " => Natural.add
-
--- Some preliminary proofs (we will need them later)
-
-theorem Natural.zero_add (n : Natural) : Natural.zero + n = n := by rfl
-
-theorem Natural.add_zero (n : Natural) : n + Natural.zero = n := by
-  induction n with
-  | zero      => rfl
-  | succ k ih => simp [Natural.add, ih]
-
-theorem Natural.add_succ (m n : Natural) : m + succ n = succ (m + n) := by
-  induction m with
-  | zero      => simp [Natural.zero_add]
-  | succ k ih => simp [Natural.add, ih]
-
--- Proving our addition is commutative
-
-theorem Natural.add_comm (m n : Natural) : m + n = n + m := by
-  induction m with
-  | zero      => simp [Natural.zero_add, Natural.add_zero]
-  | succ k ih => simp [Natural.add, Natural.add_succ, ih]
-
--- Proving our addition is associative
-
-example (m n k : Natural) : (m + n) + k = m + (n + k) := by
-  induction k with
-  | zero       => simp [Natural.add, Natural.add_zero]
-  | succ k' ih => simp [Natural.add_succ, ih]
-
--- Induction using pattern matching and recursion
-
-theorem Natural.add_assoc : ∀ m n k : Natural, (m + n) + k = m + (n + k)
-  | _, _, .zero    => by simp [Natural.add, Natural.add_zero]
-  | _, _, .succ k' => by simp [Natural.add_succ, Natural.add_assoc _ _ k']
-
--- #eval Natural.succ .zero + Natural.succ .zero
--- #eval Natural.succ (.succ .zero)
-
-
-
-end
-
-
--- example (n : Nat) :
---     add 0 n = n :=
--- by
---   induction n with
---   | zero => rfl
---   | succ k' ih => simp [add, ih]
-
--- need tweaks on the induction
-
--- Let's do more later...
