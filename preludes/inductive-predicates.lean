@@ -90,3 +90,5 @@ example (p q : Prop) : Xor' p q → (p ∧ ¬q) ∨ (¬p ∧ q) := by
   induction hpq with
   | inl hp hnq => exact Or.inl ⟨hp, hnq⟩
   | inr hnp hq => exact Or.inr ⟨hnp, hq⟩
+
+example : Xor' (Even 4) (Even 5) := Xor'.inl even_four not_even_five
