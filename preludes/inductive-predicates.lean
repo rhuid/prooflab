@@ -33,7 +33,7 @@ theorem even_six : Even 6 :=
 
 -- For all natural number n, the number 2*n is even
 
-example : ∀ n : Nat, Even (2*n) := by
+example : ∀ n : Nat, Even (2 * n) := by
   intro n
   induction n with
   | zero      => exact Even.zero              -- simp [Even.zero] also works
@@ -43,11 +43,14 @@ example : ∀ n : Nat, Even (2*n) := by
 
 -- Sum of two even numbers is even
 
--- example : Even n → Even m → Even (n + m) := by
---   intro hn hm
---   cases hn with
---   | zero => have hn_prev := Even.zero
---   | next _ Even n' => have hn_prev := Even n'
+theorem even_add : Even n → Even m → Even (n + m) := by
+  intro hn hm
+  induction hn with
+  | zero => simp [Nat.zero_add]; assumption
+  | next k hk ih =>
+    have : k + 2 + m = (k + m) + 2 := by simp [Nat.add_assoc, Nat.add_comm]
+    rw [this]
+    exact Even.next _ ih
 
 /-
   Why use inductive predicates over other alternatives?
@@ -69,14 +72,15 @@ theorem not_even_five : ¬ Even 5 := by
 theorem not_even_one : ¬ Even 1 :=
   fun h => by cases h                    -- another magic?
 
--- example (n : Nat) : ¬ Even (2*n + 1) := by
---   intro h
---   induction n with
---   | zero       => contradiction
---   | succ n' ih =>
---     cases h with
---     | .next =>
-
+example (n : Nat) : ¬ Even (2 * n + 1) := by
+  intro h
+  induction n with
+  | zero       => contradiction
+  | succ k ih =>
+    have : (2 * (k + 1) + 1) = (2 * k + 1 + 2) := by rfl
+    rw [this] at h
+    have : Even (2 * k + 1) := by cases h; simp_all
+    contradiction
 
 /-
 
