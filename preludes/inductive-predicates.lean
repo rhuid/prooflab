@@ -6,6 +6,13 @@
   We also eliminate (elimination rule) them using `induction` or `cases`.
 -/
 
+-- One way of defining even numbers is
+
+opaque Even' : Nat → Prop
+axiom Even'.zero : Even' 0
+axiom Even'.next : ∀ n : Nat, Even' n → Even' (n + 2)
+
+
 -- Defining Even numbers as inductive predicates
 -- Each `Even k` for natural number k is a proposition
 
@@ -13,18 +20,38 @@ inductive Even : Nat → Prop
 | zero : Even 0
 | next : ∀ n : Nat, Even n → Even (n + 2)
 
--- #check Even.zero
+#check Even.zero
 -- #check Even.next
--- #check Even.next _ Even.zero
+#check Even.next _ Even.zero
+
+/-
+  Why use inducdive predicates?
+  * Can prove that ¬Even 5 straightaway
+  * The constructors are precisely introduction rules
+  * Can use `cases` or `induction` to eliminate
+
+  A drawback?
+  * But we cannot directly use `simp` on them because there is no definition to unfold
+  * We can use only the constructors for all kinds of things
+-/
+
 
 -- Let's prove that some numbers are even (straight-forward)
 
 theorem even_zero : Even 0 := Even.zero
 
+-- using tactic
 example : Even 4 := by
   have even_2 : Even 2 := Even.next 0 .zero
   exact .next 2 even_2
 
+-- using `apply` on the constructor
+example : Even 4 := by
+  apply Even.next
+  apply Even.next
+  exact Even.zero
+
+-- using term-mode syntax
 theorem even_four : Even 4 :=
   Even.next _ (Even.next _ Even.zero)
 
@@ -52,25 +79,15 @@ theorem even_add : Even n → Even m → Even (n + m) := by
     rw [this]
     exact Even.next _ ih
 
-/-
-  Why use inductive predicates over other alternatives?
-  * Can prove that 5 is not even
-  * Constructors provide a nice way to perform induction or cases
-
-  Note: We cannot use rfl or simp directly on inductive predicates
--/
-
 -- Let's prove that 5 is not even
 
+-- tactic mode
 theorem not_even_five : ¬ Even 5 := by
   intro h
-  cases h                                -- some magic?
+  -- cases h                                -- some magic?
   contradiction
 
 -- For all natural number n, the number 2*n + 1 is not even
-
-theorem not_even_one : ¬ Even 1 :=
-  fun h => by cases h                    -- another magic?
 
 example (n : Nat) : ¬ Even (2 * n + 1) := by
   intro h
@@ -81,6 +98,12 @@ example (n : Nat) : ¬ Even (2 * n + 1) := by
     rw [this] at h
     have : Even (2 * k + 1) := by cases h; simp_all
     contradiction
+
+-- example (n : Nat) : ¬ Even (2 * n + 1) := by
+--   intro h
+--   induction h with
+--   |
+
 
 /-
 
@@ -143,10 +166,10 @@ example : Or' (Even 3) (Even 4) := by
 
 -- how about elimination? Use `cases` or `induction`
 
-example : Or' (Even 31) (Even 8) → Even 10 := by       -- but `contradiction` will fail for (Even 33)
+example : Or' (Even 33) (Even 8) → Even 10 := by       -- but `contradiction` will fail for (Even 33)
   intro h
   cases h with
-  | inl hl => contradiction
+  | inl hl => cases hl; contradiction
   | inr hr => exact Even.next _ hr
 
 
@@ -186,6 +209,49 @@ example (p q : Prop) : Xor' p q → (p ∧ ¬q) ∨ (¬p ∧ q) := by
   | inr hnp hq => exact Or.inr ⟨hnp, hq⟩
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 -- the following doesn't work (why?)
 -- inductive And' : Prop → Prop → Prop
 -- | intro : ∀ p q : Prop, And' p q
@@ -201,3 +267,8 @@ example (p q : Prop) : Xor' p q → (p ∧ ¬q) ∨ (¬p ∧ q) := by
 
 -- instance : AddOp' Prop where
 --   and := And'
+
+
+-- -- term mode
+-- example : ¬ Even 9 :=                    -- change 1 to some other odd number
+--   fun h => by cases h                    -- another magic?
