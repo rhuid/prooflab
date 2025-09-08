@@ -11,7 +11,7 @@ class Inhabited' (α : Type) where
 instance : Inhabited' Nat :=
   { default := 5 }
 
-#eval (Inhabited'.default : Nat)
+-- #eval (Inhabited'.default : Nat)
 
 end
 
@@ -37,7 +37,7 @@ by
 -- the following can be done in cases
 
 example {α : Type} :
-  ∀ t : Tree α, mirror t = Tree.nil ↔ t = Tree.nil :=
+   ∀ t : Tree α, mirror t = Tree.nil ↔ t = Tree.nil :=
 by
   intro t
   induction t with
@@ -52,18 +52,18 @@ by
   | nil  => simp [mirror]
   | node => simp [mirror]
 
-
-
-
-
+inductive Even : Nat → Prop
+| zero : Even 0
+| next : ∀ n : Nat, Even n → Even (n + 2)
 
 -- opaque Even' : Nat → Prop
 -- axiom Even'.zero : Even' 0
 -- axiom Even'.next : ∀ n : Nat, Even' n → Even' (n + 2)
 
-inductive Even : Nat → Prop
-| zero : Even 0
-| next : ∀ n : Nat, Even n → Even (n + 2)
+
+
+
+
 
 -- example : Even 4 :=
 --   have even_0 : Even 0 := Even.zero
@@ -76,6 +76,7 @@ inductive Star {α : Type} (R : α → α → Prop) : α → α → Prop
 | base  : ∀ a b : α, R a b → Star R a b
 | refl  : ∀ a : α, Star R a b
 | trans : ∀ a b c : α, Star R a b → Star R b c → Star R a c
+
 -- example {α : Type} (R : α → α → Prop) (a b : α) :
 
 --   Star (Star R) a b ↔ Star R a b :=
@@ -98,16 +99,70 @@ inductive Star {α : Type} (R : α → α → Prop) : α → α → Prop
 
 
 
+
+
+
+
+
+
 -- {́α : Type}
 
 -- Proof that Star is the least
 
-theorem temp {α : Type} {R : α → α → Prop} {S : α → α → Prop}
-  (hr : ∀ a b, R a b → S a b)
-  (hrefl : ∀ a, S a a)
-  (htrans : ∀ a b c, S a b → S b c → S a c) :
-  ∀ a b, Star R a b → S a b :=
-by
-  intro a b h
-  induction h with
-  | base _ _ hrab => exact hr _ _ hrab
+-- theorem temp {α : Type} {R : α → α → Prop} {S : α → α → Prop}
+--   (hr : ∀ a b, R a b → S a b)
+--   (hrefl : ∀ a, S a a)
+--   (htrans : ∀ a b c, S a b → S b c → S a c) :
+--   ∀ a b, Star R a b → S a b :=
+-- by
+--   intro a b h
+--   induction h with
+--   | base _ _ hrab => exact hr _ _ hrab
+
+
+
+/-
+  Monads
+-/
+
+class Monad' (m : Type → Type) where   -- adding this {α β : Type} causes type mismatch
+pure : α → m α
+bind : m α → (α → m β) → m β
+
+class LawfulMonad' (m : Type → Type) extends Monad' m where
+pure_bind (a : α) (f : α → m β) :
+  bind (pure a) f = f a
+bind_pure (ma : m α) :
+  bind ma (pure) = ma
+bind_assoc (f : α → m β) (g : β → m γ) (ma : m α) :
+  bind (bind ma f) g = bind ma (fun a => bind (f a) g)
+
+-- Showing that Option' is a monad
+
+inductive Option' (α : Type) : Type
+| none : Option' α
+| some : (k : α) → Option' α
+
+def Option'.pure : α → Option' α := Option'.some
+
+def Option'.bind : Option' α → (f : α → Option' β) → Option' β
+| none, _ => none
+| some k, f => f k
+
+instance Option'.LawfulMonad' : LawfulMonad' Option' := {
+pure := Option'.pure
+bind := Option'.bind
+pure_bind := by
+  intro α β a f
+  rfl
+bind_pure := by
+  intro α ma
+  cases ma with
+  | none   => rfl
+  | some _ => rfl
+bind_assoc := by
+  intro α β γ f g ma
+  cases ma with
+  | none   => rfl
+  | some _ => rfl
+}
