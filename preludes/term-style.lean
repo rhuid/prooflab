@@ -1,14 +1,14 @@
 /-
 
 ++++++++++++++++++++
-| Term mode proofs |
+| Term style proofs |
 ++++++++++++++++++++
 
-We are calling them term mode proofs as these proof styles employ lambda terms directly,
+We are calling them term style proofs as these proof styles employ lambda terms directly,
 that is, we construct a function (lambda term) as a proof.
 Some keywords are `show`, etc.
 
-Term mode proofs are more direct and concise at the cost of less interactive tactic-ky feedback.
+Term style proofs are more direct and concise at the cost of less interactive tactic-ky feedback.
 
 -/
 
@@ -47,7 +47,7 @@ theorem and_assoc' : (a ∧ b) ∧ c → a ∧ (b ∧ c) :=
   fun ⟨⟨ha, hb⟩, hc⟩ => ⟨ha, ⟨hb, hc⟩⟩
 
 -- `cases` won't work, use `match` instead for pattern matching
-example : (a → c) ∧ (b → c) → a ∨ b → c :=
+example : (a → c) ∧ (b → c) → (a ∨ b) → c :=
   fun hacbc hab =>
   match hab with
   | Or.inl ha => And.left hacbc ha
@@ -79,7 +79,7 @@ end
 
 /-
 
-Tactic mode vs. Term mode
+Tactics     vs. term style
 
 `intro`         `fun`
 `have`          `have`
