@@ -20,9 +20,9 @@ inductive Even : Nat → Prop
 | zero : Even 0
 | next : ∀ n : Nat, Even n → Even (n + 2)
 
-#check Even.zero
+-- #check Even.zero
 -- #check Even.next
-#check Even.next _ Even.zero
+-- #check Even.next _ Even.zero
 
 /-
   Why use inducdive predicates?
@@ -221,13 +221,56 @@ example (p q : Prop) : Xor' p q → (p ∧ ¬q) ∨ (¬p ∧ q) := by
 
 
 
+-- using repeat'
+-- example : Even 10 ∧ Even 12 ∧ Even 7 ∧ Even 0 := by
+--   repeat' apply And.intro
+--   repeat' apply Even.next
 
+-- using `first`
+-- example : Even 4 ∧ Even 7 ∧ Even 3 ∧ Even 0 := by
+--   repeat' apply And.intro
+--   repeat'
+--     first
+--     | apply Even.next
+--     | exact Even.zero
 
+-- using `all_goals`
+-- example : Even 4 ∧ Even 7 ∧ Even 3 ∧ Even 0 := by
+--   repeat' apply And.intro
+--   all_goals apply Even.next
 
+-- using `try`
+-- example : Even 4 ∧ Even 7 ∧ Even 3 ∧ Even 0 := by
+--   repeat' apply And.intro
+--   all_goals try apply Even.next
+--   all_goals try apply Even.next
+--   all_goals try apply Even.next
+--   all_goals apply Even.next
+--   all_goals try apply Even.next
 
+-- using `any_goals` and `solve`
+-- example : Even 4 ∧ Even 7 ∧ Even 3 ∧ Even 0 := by
+--   repeat' apply And.intro
+--   any_goals
+--   solve
+--   | repeat'
+--     first
+--     | apply Even.next
+--     | apply Even.zero
 
+-- using macros
+macro "intro_and_even" : tactic =>
+  `(tactic|
+     (repeat' apply And.intro
+      any_goals
+      solve
+      | repeat'
+        first
+        | apply Even.next
+        | apply Even.zero))
 
-
+example : Even 4 ∧ Even 7 ∧ Even 3 ∧ Even 0 := by
+  intro_and_even
 
 
 
