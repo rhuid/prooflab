@@ -66,7 +66,7 @@ def _firstThirdFifthSeventh [Monad m] (lookup : List α → Nat → m α) (xs : 
   lookup xs 6 >>= fun seventh =>
   pure (first, third, fifth, seventh)
 
-#eval _firstThirdFifthSeventh (fun xs i => xs[i]?) [7, 8, 12, 4, 3, 10, 1]
+-- #eval _firstThirdFifthSeventh (fun xs i => xs[i]?) [7, 8, 12, 4, 3, 10, 1]
 
 /-
 
@@ -163,16 +163,37 @@ bind_assoc := by
 
 
 
+/-
+  I want to model non-determinism using a custom Set monad.
 
 
+-/
 
--- -- Set as a function type (α to Prop)
+-- Set as a function type (α to Prop)
 def Set (α : Type) := α → Prop
 
--- -- Set membership notation
+-- Set membership and notation
 def Set.mem (a : α) (s : Set α) : Prop := s a
 notation:50 a " ∈ " s => Set.mem a s
 
--- -- Define pure and bind operations
+-- Takes an element and packages it into a singleton set
 def Set.pure (a : α) : Set α := fun x => x = a
-def Set.bind (s : Set α) (f : α → Set β) : Set β := fun b => ∃ a, a ∈ s ∧ b ∈ f a
+
+-- Combines all possibilities from s and applies f to each
+def Set.bind (s : Set α) (f : α → Set β) : Set β :=
+  fun b => ∃ a, a ∈ s ∧ b ∈ f a
+
+
+#check Set Nat
+-- example Set Nat 5
+
+def setNat := Set Nat
+
+
+
+-- example Set.mem 5 setNat := sorry
+
+#check Set.mem 5
+
+-- Define pure and bind operations
+-- def Set.bind (s : Set α) (f : α → Set β) : Set β := fun b => ∃ a, a ∈ s ∧ b ∈ f a

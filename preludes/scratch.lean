@@ -1,168 +1,80 @@
-
 /-
- Chapter 5: Inductive, structure, typeclasses
+  Modelling non-determinism using a custom Set monad.
+
+  Here, we build a monad Set from scratch, define set operations, prove that Set is a monad.
 -/
 
-section
+-- Set as a function type
+def Set (α : Type) := α → Prop
 
-class Inhabited' (α : Type) where
-  default : α
+-- Set membership
+def Set.mem (a : α) (s : Set α) : Prop := s a
+notation:50 a " ∈ " s => Set.mem a s
 
-instance : Inhabited' Nat :=
-  { default := 5 }
+-- Empty set
+def Set.empty : Set α := fun _ => False
 
--- #eval (Inhabited'.default : Nat)
+-- Set union and intersection
+def Set.union        (s t : Set α) : Set α := fun x => (x ∈ s) ∨ (x ∈ t)
+def Set.intersection (s t : Set α) : Set α := fun x => (x ∈ s) ∧ (x ∈ t)
+notation:50 s " ∪ " t => Set.union s t
+notation:50 s " ∩ " t => Set.intersection s t
 
-end
+-- Set complement
+def Set.complement (s : Set α) : Set α := fun x => ¬ (x ∈ s)
 
-inductive Tree (α : Type)
-| nil  : Tree α
-| node : α → Tree α → Tree α → Tree α
+-- Examples
+-- {2, 3, 5, 7}
+def primesLessThanTen : Set Nat := fun x => (x = 2) ∨ (x = 3) ∨ (x = 5) ∨ (x = 7)
 
-def mirror {α : Type} : Tree α → Tree α
-| Tree.nil        => Tree.nil
-| Tree.node a l r => Tree.node a (mirror r) (mirror l)
+-- {1}
+def one : Set Nat := fun x => x = 1
 
--- induction vs. cases
--- using induction because we need induction hypothesis
+-- {2, 3, 5, 7} intersection {1}
+def ourIntersection := primesLessThanTen ∩ one
 
-example {α : Type} (t : Tree α) :
-  mirror (mirror t) = t :=
-by
-  induction t with
-  | nil => rfl
-  | node a l r ih_l ih_r => simp [mirror]
-                            simp [ih_l, ih_r]
+-- Let's build the monad
+-- Converts an element into a singleton set
+def Set.pure (a : α) : Set α := fun x => x = a
 
--- the following can be done in cases
+-- Combines all possibilities from s and applies f to each
+def Set.bind (s : Set α) (f : α → Set β) : Set β :=
+fun b => ∃ a, (a ∈ s) ∧ (b ∈ f a)
 
-example {α : Type} :
-   ∀ t : Tree α, mirror t = Tree.nil ↔ t = Tree.nil :=
-by
-  intro t
-  induction t with
-  | nil                  => simp [mirror]
-  | node a l r ih_l ih_r => simp [mirror]
+instance Set.Monad : Monad Set where
+pure := Set.pure
+bind := Set.bind
 
-example {α : Type} :
-  ∀ t : Tree α, mirror t = Tree.nil ↔ t = Tree.nil :=
-by
-  intro t
-  cases t with
-  | nil  => simp [mirror]
-  | node => simp [mirror]
+-- Monad laws proofs
+-- theorem pure_bind (a : α) (f : α → Set β) :
+--     bind (pure a) f = f a := by
+--   ext b
+--   unfold bind Set.bind pure Set.pure Set.mem
+--   constructor
+--   · intro ⟨a', ⟨ha', hb⟩⟩
+--     rw [ha'] at hb
+--     exact hb
+--   · intro h
+--     exists a
+--     constructor <;> assumption
 
-inductive Even : Nat → Prop
-| zero : Even 0
-| next : ∀ n : Nat, Even n → Even (n + 2)
+-- theorem bind_pure (s : Set α) : bind s pure = s := by
+--   ext x
+--   unfold bind Set.bind pure Set.pure Set.mem
+--   constructor
+--   · intro ⟨a, ha, hx⟩
+--     rw [hx] at ha
+--     exact ha
+--   · intro h
+--     exists x
+--     constructor <;> assumption
 
--- opaque Even' : Nat → Prop
--- axiom Even'.zero : Even' 0
--- axiom Even'.next : ∀ n : Nat, Even' n → Even' (n + 2)
-
-
-
-
-
-
--- example : Even 4 :=
---   have even_0 : Even 0 := Even.zero
---   have even_2 : Even 2 := Even.next _ even_0
---   show Even 4 from Even.next _ even_2
-
--- -- Reflexive-transitive closure
-
-inductive Star {α : Type} (R : α → α → Prop) : α → α → Prop
-| base  : ∀ a b : α, R a b → Star R a b
-| refl  : ∀ a : α, Star R a b
-| trans : ∀ a b c : α, Star R a b → Star R b c → Star R a c
-
--- example {α : Type} (R : α → α → Prop) (a b : α) :
-
---   Star (Star R) a b ↔ Star R a b :=
--- by
---   apply Iff.intro
---   . intro h
---     induction h with
---     | base a b hab => exact hab
---     | refl a       => apply Star.refl
---     | trans a b c hab hbc ihab ihbc =>
---       apply Star.trans a b
---       . exact ihab
---       . exact ihbc
---   . intro h
---     apply Star.base
---     exact
-
-
-
-
-
-
-
-
-
-
-
-
--- {́α : Type}
-
--- Proof that Star is the least
-
--- theorem temp {α : Type} {R : α → α → Prop} {S : α → α → Prop}
---   (hr : ∀ a b, R a b → S a b)
---   (hrefl : ∀ a, S a a)
---   (htrans : ∀ a b c, S a b → S b c → S a c) :
---   ∀ a b, Star R a b → S a b :=
--- by
---   intro a b h
---   induction h with
---   | base _ _ hrab => exact hr _ _ hrab
-
-
-
-/-
-  Monads
--/
-
-class Monad' (m : Type → Type) where   -- adding this {α β : Type} causes type mismatch
-pure : α → m α
-bind : m α → (α → m β) → m β
-
-class LawfulMonad' (m : Type → Type) extends Monad' m where
-pure_bind (a : α) (f : α → m β) :
-  bind (pure a) f = f a
-bind_pure (ma : m α) :
-  bind ma (pure) = ma
-bind_assoc (f : α → m β) (g : β → m γ) (ma : m α) :
-  bind (bind ma f) g = bind ma (fun a => bind (f a) g)
-
--- Showing that Option' is a monad
-
-inductive Option' (α : Type) : Type
-| none : Option' α
-| some : (k : α) → Option' α
-
-def Option'.pure : α → Option' α := Option'.some
-
-def Option'.bind : Option' α → (f : α → Option' β) → Option' β
-| none, _ => none
-| some k, f => f k
-
-instance Option'.LawfulMonad' : LawfulMonad' Option' := {
-pure := Option'.pure
-bind := Option'.bind
-pure_bind := by
-  intro α β a f
-  rfl
-bind_pure := by
-  intro α ma
-  cases ma with
-  | none   => rfl
-  | some _ => rfl
-bind_assoc := by
-  intro α β γ f g ma
-  cases ma with
-  | none   => rfl
-  | some _ => rfl
-}
+-- theorem bind_assoc (s : Set α) (f : α → Set β) (g : β → Set γ) :
+--     bind (bind s f) g = bind s (fun x => bind (f x) g) := by
+--   ext c
+--   unfold bind Set.bind Set.mem
+--   constructor
+--   · intro ⟨b, ⟨⟨a, ha, hb⟩, hc⟩⟩
+--     exact ⟨a, ha, b, hb, hc⟩
+--   · intro ⟨a, ha, b, hb, hc⟩
+--     exact ⟨b, ⟨a, ha, hb⟩, hc⟩
