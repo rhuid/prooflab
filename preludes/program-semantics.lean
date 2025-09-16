@@ -10,8 +10,7 @@
 
 ### Three key flavors:
   + Big-step semantics (natural semantics)
-  + Small-step semantics (structural operational semantics)
-  + Abstract machine semantics -/
+  + Small-step semantics (structural operational semantics) -/
 
 /- Modelling a small imperative language -/
 
@@ -27,5 +26,12 @@ inductive Stmt : Type where
 | whileDo : (State → Prop) → Stmt → Stmt
 
 -- Some examples
-def smallLoop : Stmt
-| Stmt.whileDo (fun s => s "x" > s "y") (Stmt.assign "x" (fun s => s "x" + 2))
+-- def smallLoop : Stmt
+-- | Stmt.whileDo (fun s => s "x" > s "y") (Stmt.assign "x" (fun s => s "x" + 2))
+
+/- ## Hoare Logic
+
+  + Hoare triple: {P}C{Q}, precondition, command, postcondition
+
+
+ -/
