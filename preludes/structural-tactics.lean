@@ -93,7 +93,6 @@ example (a b : Prop) : a → b → (a ∧ b) := by
 
 #check And.intro
 
-
 -- Even more succinctly,... using <·>
 
 example (a b : Prop) : a ∧ b → b ∧ a := by

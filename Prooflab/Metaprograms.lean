@@ -10,6 +10,8 @@ open Lean.Meta
 open Lean.Elab
 open Lean.Elab.Tactic
 
+namespace Prooflab.Metaprograms
+
 /-- Search for a matching hypothesis (like `assumption` tactic) -/
 def hypothesis : TacticM Unit :=
   withMainContext (do
@@ -134,3 +136,5 @@ elab "prove_direct" : tactic => proveDirect
 
 example (a b : Prop) : a ∧ b → b ∧ a := by prove_direct
 example (a : Nat) : a + 0 = a := by prove_direct
+
+end Prooflab.Metaprograms
