@@ -8,3 +8,10 @@ name = "Prooflab"
 [[lean_exe]]
 name = "prooflab"
 root = "Main"
+
+# [[require]]
+# name = "mathlib"
+# scope = "leanprover-community"
+
+
+# curl https://raw.githubusercontent.com/leanprover-community/mathlib4/master/lean-toolchain -o lean-toolchain

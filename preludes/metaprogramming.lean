@@ -41,7 +41,7 @@ partial def destructAndExpr (hP : Expr) : TacticM Bool :=
   withMainContext (do
   let target ← getMainTarget
   let P ← inferType hP
-  -- logInfo m!"The type is {P}"
+  logInfo m!"The type is {P}"
   let eq ← isDefEq P target
   if eq then
     let goal ← getMainGoal
@@ -66,10 +66,10 @@ def destructAnd (name : Name) : TacticM Unit :=
 
 elab "destruct_and" h:ident : tactic => destructAnd (TSyntax.getId h)
 
-example (h : a ∧ b ∧ c ∧ d) : a := by destruct_and h
-example (h : a ∧ b ∧ c ∧ d) : b := by destruct_and h
-example (h : a ∧ b ∧ c ∧ d) : c := by destruct_and h
-example (h : a ∧ b ∧ c ∧ d) : d := by destruct_and h
+-- example (h : a ∧ b ∧ c ∧ d) : a := by destruct_and h
+-- example (h : a ∧ b ∧ c ∧ d) : b := by destruct_and h
+-- example (h : a ∧ b ∧ c ∧ d) : c := by destruct_and h
+-- example (h : a ∧ b ∧ c ∧ d) : d := by destruct_and h
 
 /- A direct proof finder -/
 
@@ -133,4 +133,4 @@ elab "prove_direct" : tactic => proveDirect
 -- example : 4 + 3 = 10 := by prove_direct
 
 example (a b : Prop) : a ∧ b → b ∧ a := by prove_direct
-example (a : Nat) : a + 0 = a := by prove_direct
+example (a : Nat)    : a + 0 = a     := by prove_direct
