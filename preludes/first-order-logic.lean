@@ -64,3 +64,26 @@ theorem barber_paradox (h : ∀ x : Men, shaves barber x ↔ ¬ shaves x x) : Fa
   else absurd (h₂ h') h'
 
 -- Existential quantifiers
+
+variable (α : Type) (p q : α → Prop)
+variable (r : Prop)
+
+example : (∃ x : α, r) → r :=
+  fun ⟨_, h⟩ => h
+
+example (a : α) : r → (∃ x : α, r) :=
+  fun hr => Exists.intro a hr
+
+example : (∃ x, p x ∧ r) ↔ (∃ x, p x) ∧ r :=
+  Iff.intro
+  (fun ⟨x, hpxr⟩ => ⟨Exists.intro x hpxr.1, hpxr.2⟩)
+  (fun ⟨⟨x, hpx⟩, r⟩ => Exists.intro x ⟨hpx, r⟩)
+
+example : (∃ x, p x ∨ q x) ↔ (∃ x, p x) ∨ (∃ x, q x) :=
+  Iff.intro
+  (fun ⟨x, hpq⟩ => match hpq with
+                  | Or.inl hp => Or.inl ⟨x, hp⟩
+                  | Or.inr hq => Or.inr ⟨x, hq⟩)
+  (fun h => match h with
+           | Or.inl ⟨x, hp⟩ => Exists.intro x (Or.inl hp)
+           | Or.inr ⟨x, hq⟩ => Exists.intro x (Or.inr hq))
