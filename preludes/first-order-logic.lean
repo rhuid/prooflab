@@ -7,6 +7,8 @@ set_option diagnostics true
 
 -- Universal quantifiers
 
+section universal_quantifiers
+
 variable (α : Type)
 variable (p q : α → Prop)
 
@@ -52,20 +54,28 @@ example : (∀ x, p x) ∨ (∀ x, q x) → ∀ x, p x ∨ q x :=
   | Or.inl hp => (fun x => Or.inl (hp x))
   | Or.inr hq => (fun x => Or.inr (hq x))
 
+end universal_quantifiers
+
 -- Russell's paradox (barber paradox)
+section barber_paradox
 
 variable (Men : Type) (barber : Men)
 variable (shaves : Men → Men → Prop)
 
+open Classical in
 theorem barber_paradox (h : ∀ x : Men, shaves barber x ↔ ¬ shaves x x) : False :=
   let ⟨h₁, h₂⟩ := h barber
   if h' : shaves barber barber
   then absurd h' (h₁ h')
   else absurd (h₂ h') h'
 
--- Existential quantifiers
+end barber_paradox
 
-variable (α : Type) (p q : α → Prop)
+-- Existential quantifiers
+section existential_quantifiers
+
+variable (α : Type)
+variable (p q : α → Prop)
 variable (r : Prop)
 
 example : (∃ x : α, r) → r :=
@@ -87,3 +97,10 @@ example : (∃ x, p x ∨ q x) ↔ (∃ x, p x) ∨ (∃ x, q x) :=
   (fun h => match h with
            | Or.inl ⟨x, hp⟩ => Exists.intro x (Or.inl hp)
            | Or.inr ⟨x, hq⟩ => Exists.intro x (Or.inr hq))
+
+example : (∀ x, p x) ↔ ¬ (∃ x, ¬ p x) :=
+  Iff.intro
+  (fun ha ⟨x, he⟩ => absurd (ha x) he)
+  (fun h x => by sorry)
+
+end existential_quantifiers
