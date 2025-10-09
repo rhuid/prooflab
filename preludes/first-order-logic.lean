@@ -3,6 +3,7 @@
 /- First order (predicate) logic -/
 
 set_option linter.unusedVariables false
+set_option diagnostics true
 
 variable (α : Type)
 variable (p q : α → Prop)
@@ -20,8 +21,8 @@ example : (∀ x, p x) ∨ (∀ x, q x) → ∀ x, p x ∨ q x :=
   (fun hp => Or.inl (hp x))
   (fun hq => Or.inr (hq x))
 
--- Bring a component of a formula outside a universal quantifier,
--- when it does not depend on the quantified variable
+-- It is often possible to bring a component of a formula
+-- outside a universal quantifier, when it does not depend on the quantified variable
 
 variable (r : Prop)
 
@@ -30,25 +31,21 @@ example : α → ((∀ x : α, r) ↔ r) :=
   (fun h => h a)
   (fun hr _ => hr)
 
-example : α → ((∀ x : α, r) ↔ r) := by
-  intro ha
-  apply Iff.intro
-  { intro h
-    exact h ha }
-  { intro hr
-    exact (fun _ => hr)}
+open Classical
 
-variable (r : Prop)
+example : (∀ x, p x ∨ r) ↔ (∀ x, p x) ∨ r :=
+  Iff.intro
+  (fun h => if hr : r then Or.inr hr
+           else Or.inl (fun x =>
+             Or.elim (h x)
+             (fun hpx => hpx)
+             (fun hr' => absurd hr' hr)))
+  (fun h => match h with
+           | Or.inl hp => (fun x => Or.inl (hp x))
+           | Or.inr r  => (fun x => Or.inr r))
 
-example : α → ((∀ x : α, r) ↔ r) :=
-  fun a => Iff.intro
-  (fun h => h a)
-  (fun hr _ => hr)
-
-example : α → ((∀ x : α, r) ↔ r) := by
-  intro ha
-  apply Iff.intro
-  { intro h
-    exact h ha }
-  { intro hr
-    exact (fun _ => hr)}
+example : (∀ x, p x) ∨ (∀ x, q x) → ∀ x, p x ∨ q x :=
+  fun h =>
+  match h with
+  | Or.inl hp => (fun x => Or.inl (hp x))
+  | Or.inr hq => (fun x => Or.inr (hq x))
