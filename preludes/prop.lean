@@ -112,3 +112,60 @@ example : (p → r ∨ s) → (p → r) ∨ (p → s) :=
     | Or.inl hr' => hr hr'
     | Or.inr hs' => hs hs'
   Or.inr (fun hp => byContradiction (fun _ => hnp hp))
+
+-- Pierce's law
+example : ((p → q) → p) → p :=
+  fun h =>
+  if hp : p then hp
+  else let hpq : p → q := fun hp' => absurd hp' hp
+  h hpq
+
+example : (¬q → ¬p) → (p → q) :=
+  fun h hp =>
+  if hq : q then hq
+  else let hnp : ¬p := h hq
+  absurd hp hnp
+
+example : (p ∨ ¬p) :=
+  if hp : p then Or.inl hp else Or.inr hp
+
+example : (p → q) → (¬p ∨ q) :=
+  fun h => if hp : p then Or.inr (h hp) else Or.inl hp
+
+-- another long tactic proof again (see below for term mode proof)
+example : ¬(p → q) → p ∧ ¬q := by
+  intro h
+  apply Or.elim (em p)
+  { intro hp
+    apply Or.elim (em q)
+    { intro hq
+      have hpq : p → q := fun _ => hq
+      have hh := h hpq
+      contradiction }
+    { intro hnq
+      exact ⟨hp, hnq⟩ }}
+  { intro hnp
+    apply Or.elim (em q)
+    { intro hq
+      have hpq : p → q := fun _ => hq
+      have hh := h hpq
+      contradiction }
+    { intro hnq
+      have hpq : p → q := fun hp => absurd hp hnp
+      have hh := h hpq
+      contradiction }}
+
+-- same as above (but using `if else` and shorter)
+example : ¬(p → q) → p ∧ ¬q :=
+  fun h =>
+  if hp : p then
+    if hq : q then
+      have hpq : p → q := fun _ => hq
+      absurd hpq h
+    else ⟨hp, hq⟩
+  else if hq : q then
+         have hpq : p → q := fun _ => hq
+         absurd hpq h
+       else
+         have hpq : p → q := fun h' => absurd h' hp
+         absurd hpq h
