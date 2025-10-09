@@ -98,9 +98,13 @@ example : (∃ x, p x ∨ q x) ↔ (∃ x, p x) ∨ (∃ x, q x) :=
            | Or.inl ⟨x, hp⟩ => Exists.intro x (Or.inl hp)
            | Or.inr ⟨x, hq⟩ => Exists.intro x (Or.inr hq))
 
+open Classical
+
 example : (∀ x, p x) ↔ ¬ (∃ x, ¬ p x) :=
   Iff.intro
   (fun ha ⟨x, he⟩ => absurd (ha x) he)
-  (fun h x => by sorry)
+  (fun h x => byContradiction (fun hnp => h ⟨x, hnp⟩))
+
+
 
 end existential_quantifiers
