@@ -105,6 +105,11 @@ example : (∀ x, p x) ↔ ¬ (∃ x, ¬ p x) :=
   (fun ha ⟨x, he⟩ => absurd (ha x) he)
   (fun h x => byContradiction (fun hnp => h ⟨x, hnp⟩))
 
-
+example : (∃ x, p x) ↔ ¬ (∀ x, ¬ p x) :=
+  Iff.intro
+  (fun ⟨x, hp⟩ h => absurd hp (h x))
+  (fun h => byContradiction (fun hnp =>
+                            let h' : ∀ x, ¬ p x := fun x hp => hnp ⟨x, hp⟩
+                            h h'))
 
 end existential_quantifiers
