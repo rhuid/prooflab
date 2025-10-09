@@ -5,6 +5,8 @@
 set_option linter.unusedVariables false
 set_option diagnostics true
 
+-- Universal quantifiers
+
 variable (α : Type)
 variable (p q : α → Prop)
 
@@ -49,3 +51,16 @@ example : (∀ x, p x) ∨ (∀ x, q x) → ∀ x, p x ∨ q x :=
   match h with
   | Or.inl hp => (fun x => Or.inl (hp x))
   | Or.inr hq => (fun x => Or.inr (hq x))
+
+-- Russell's paradox (barber paradox)
+
+variable (Men : Type) (barber : Men)
+variable (shaves : Men → Men → Prop)
+
+theorem barber_paradox (h : ∀ x : Men, shaves barber x ↔ ¬ shaves x x) : False :=
+  let ⟨h₁, h₂⟩ := h barber
+  if h' : shaves barber barber
+  then absurd h' (h₁ h')
+  else absurd (h₂ h') h'
+
+-- Existential quantifiers
