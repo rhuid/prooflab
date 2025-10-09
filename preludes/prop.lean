@@ -169,3 +169,12 @@ example : ¬(p → q) → p ∧ ¬q :=
        else
          have hpq : p → q := fun h' => absurd h' hp
          absurd hpq h
+
+-- The part of De Morgan's law which is not provable in intuitionistic logic
+example : ¬(p ∧ q) → ¬p ∨ ¬q :=
+  fun h =>
+  if hp : p then
+    if hq : q then
+      absurd ⟨hp, hq⟩ h
+    else Or.inr hq
+  else Or.inl hp
