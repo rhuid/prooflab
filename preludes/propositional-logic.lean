@@ -178,3 +178,5 @@ example : ¬(p ∧ q) → ¬p ∨ ¬q :=
       absurd ⟨hp, hq⟩ h
     else Or.inr hq
   else Or.inl hp
+
+-- this is all for today....still feeling I am not doing good enough. I took hours to complete this (that too with some hints along the way)
