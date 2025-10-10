@@ -112,4 +112,33 @@ example : (∃ x, p x) ↔ ¬ (∀ x, ¬ p x) :=
                             let h' : ∀ x, ¬ p x := fun x hp => hnp ⟨x, hp⟩
                             h h'))
 
+example : (¬ ∃ x, p x) ↔ (∀ x, ¬ p x) :=
+  Iff.intro
+  (fun hnp x hp => hnp ⟨x, hp⟩)
+  (fun h ⟨x, hp⟩ => (h x) hp)
+
+example : (¬ ∀ x, p x) ↔ (∃ x, ¬ p x) :=
+  Iff.intro
+  (fun h => byContradiction
+           (fun h' => let h'' : ∀ x, p x :=
+                     fun x => byContradiction (fun hnpx => h' ⟨x, hnpx⟩)
+           h h''))
+  (fun ⟨x, hnp⟩ h => absurd (h x) hnp)
+
+example : (∀ x, p x → r) ↔ (∃ x, p x) → r := by sorry
+
+example (a : α) : (∃ x, p x → r) ↔ (∀ x, p x) → r :=
+  Iff.intro
+  (fun ⟨x, hpr⟩ hp => hpr (hp x))
+  (fun hpr => Exists.intro a
+             (fun hpa => byContradiction
+                        (fun hr => let tmp : ∀ x, p x := (fun x => by sorry)
+                                  hr (hpr tmp))))
+
+example (a : α) : (∃ x, r → p x) ↔ (r → ∃ x, p x) :=
+  Iff.intro
+  (fun ⟨x, hrp⟩ hr => Exists.intro x (hrp hr))
+  (fun h => if hr : r then let ⟨x, hh⟩ := h hr; Exists.intro x (fun _ => hh)
+           else Exists.intro a (fun hr' => absurd hr' hr))
+
 end existential_quantifiers
