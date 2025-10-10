@@ -125,23 +125,24 @@ example : (¬ ∀ x, p x) ↔ (∃ x, ¬ p x) :=
            h h''))
   (fun ⟨x, hnp⟩ h => absurd (h x) hnp)
 
-example : (∀ x, p x → r) ↔ (∃ x, p x) → r := by sorry
+example : (∀ x, p x → r) ↔ (∃ x, p x) → r :=
+  Iff.intro
+  (fun h ⟨x, hp⟩ => h x hp)
+  (fun h x hp => h ⟨x, hp⟩)
 
 example (a : α) : (∃ x, p x → r) ↔ (∀ x, p x) → r :=
   Iff.intro
   (fun ⟨x, hpr⟩ hp => hpr (hp x))
   (fun h => if hr : r then ⟨a, fun _ => hr⟩
-           else by sorry)
+           else Exists.intro a (fun _ => by sorry))
 
 example (a : α) : ((∀ x, p x) → r) → (∃ x, p x → r) := by
   intro h
   apply Or.elim (em r)
   { intro hr; exact ⟨a, fun _ => hr⟩ }
   { intro hnr
-    sorry }
-
-
-
+    sorry
+      }
 
 example (a : α) : (∃ x, r → p x) ↔ (r → ∃ x, p x) :=
   Iff.intro
