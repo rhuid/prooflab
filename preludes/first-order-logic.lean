@@ -130,10 +130,18 @@ example : (∀ x, p x → r) ↔ (∃ x, p x) → r := by sorry
 example (a : α) : (∃ x, p x → r) ↔ (∀ x, p x) → r :=
   Iff.intro
   (fun ⟨x, hpr⟩ hp => hpr (hp x))
-  (fun hpr => Exists.intro a
-             (fun hpa => byContradiction
-                        (fun hr => let tmp : ∀ x, p x := (fun x => by sorry)
-                                  hr (hpr tmp))))
+  (fun h => if hr : r then ⟨a, fun _ => hr⟩
+           else by sorry)
+
+example (a : α) : ((∀ x, p x) → r) → (∃ x, p x → r) := by
+  intro h
+  apply Or.elim (em r)
+  { intro hr; exact ⟨a, fun _ => hr⟩ }
+  { intro hnr
+    sorry }
+
+
+
 
 example (a : α) : (∃ x, r → p x) ↔ (r → ∃ x, p x) :=
   Iff.intro
