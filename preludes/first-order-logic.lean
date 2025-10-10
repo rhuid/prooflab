@@ -135,7 +135,10 @@ example (a : α) : (∃ x, p x → r) ↔ (∀ x, p x) → r :=
   (fun ⟨x, hpr⟩ hp => hpr (hp x))
   (fun h => if hr : r then ⟨a, fun _ => hr⟩
            else have h₁ : ¬ ∀ x, p x := fun hx => hr (h hx)
-                have h₂ : ∃ x, ¬ p x := sorry
+                have h₂ : ∃ x, ¬ p x := byContradiction
+                                        (fun hnp =>
+                                        have hpx : ∀ x, p x := fun x => by grind
+                                        h₁ hpx)
                 match h₂ with
                 | ⟨x, hx⟩ => ⟨x, fun hpx => absurd hpx hx⟩)
 
