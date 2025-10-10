@@ -134,7 +134,7 @@ example (a : α) : (∃ x, p x → r) ↔ (∀ x, p x) → r :=
   Iff.intro
   (fun ⟨x, hpr⟩ hp => hpr (hp x))
   (fun h => if hr : r then ⟨a, fun _ => hr⟩
-           else have h₁ : ¬ ∀ x, p x := sorry
+           else have h₁ : ¬ ∀ x, p x := fun hx => hr (h hx)
                 have h₂ : ∃ x, ¬ p x := sorry
                 match h₂ with
                 | ⟨x, hx⟩ => ⟨x, fun hpx => absurd hpx hx⟩)
