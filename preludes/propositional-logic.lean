@@ -178,3 +178,15 @@ example : ¬(p ∧ q) → ¬p ∨ ¬q :=
       absurd ⟨hp, hq⟩ h
     else Or.inr hq
   else Or.inl hp
+
+variable (A B : Prop)
+
+-- Resolution rule
+example : (p ∨ A) ∧ (¬p ∨ B) → A ∨ B :=
+  fun ⟨ha, hb⟩ =>
+  match ha with
+  | Or.inl hp =>
+    match hb with
+    | Or.inl hnp => absurd hp hnp
+    | Or.inr h   => Or.inr h
+  | Or.inr h  => Or.inl h
