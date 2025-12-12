@@ -1,0 +1,35 @@
+#+title: Lean (thesis mid presentation)
+* Basics of Lean
+** Type theory
+** Functional language
+*** Functors and monads
+** Extensibility (syntax, macros)
+*** Lean compiler is written in Lean
+** Theorem prover or proof assistant
+*** Core: tactics, lambdas
+*** Demos: propositional logic, first order logic
+*** Mathlib
+*** Metaprogramming
+*** Program verification (Hoare logic, operational semantics)
+*** A general purpose programming language
+**** Show a small demo (my expenses calculator or markdown converter)
+* Loom
+** Weakest precondition generator via transformer monad algebras
+* A small imperative style language
+** Syntax defined in Lean
+** Semantics
+** Verification (show a simple snippet?)
+* TPIL
+** tactics
+*** apply: command for constructing function application interactively
+**** apply And.intro ha hb
+**** (a \to b \to a and b)
+*** intro: command for constructing function abstractions interactively
+**** intro ha hb
+** Automation
+**** rw
+***** surgical tool for manipulating a goal or hypothesis
+***** apply substitutions to goals and hypothesis, providing a convenient way of working with equality
+**** simp
+***** a number of identities in Lean's library have been tagged with the [simp] attribute
+***** simp tactic uses them to iteratively rewrite subterms in an expression

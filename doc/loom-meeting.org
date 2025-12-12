@@ -1,0 +1,88 @@
+* Loom: A sloppy overview
+** Dijkstra monads
+*** Specification monad W
+**** For a computation monad M, one defines a specification monad W that represents predicate-transformer
+*** W has pure : \alpha \to W \alpha and bind : W \alpha \to (\alpha \to W \beta) \to W \beta so specifications compose monadically
+*** Weakest precondition WP transformer
+**** WP_M : M \to W as monad morphism (natural transformation)
+**** WP_M : M \alpha \to W \alpha turns an actual computation m : M \alpha into its specification WP_M m : W \alpha
+**** TODO Come back later...
+*** Hoare triples from WP
+**** Correctness ~{pre} m {post}~ is encoded as ~\forall s. pre s => (WP m post) s~ (come back later..., s is the state here)
+*** Example: ~StateM~ monad
+**** M ... ~StateM~ \sigma \alpha : \sigma \to (\alpha \times \sigma)
+**** W ... ~StateW~ \sigma \alpha : (\alpha \to \sigma \to Prop) \to (\sigma \to Prop)
+**** A postcondition ~post : \alpha \to \sigma \to Prop~
+**** An assertion language ~L = \sigma \to Prop~
+**** A ~w : StateW \sigma \alpha~ maps a postcondition ~post~ to the precondition ~w post~
+*** A problem with Dijkstra monads
+**** Automation is hard when M is complex with multiple effects
+**** Need to define a different W or WP for each computation M
+**** They do not compose well
+
+** Assertion language L
+*** *L is chosen to be a complete lattice
+**** Partially ordered by implication \to
+**** Lattice gives us join (disjunction) and meet (conjunction)
+**** True/false (top and bottom element)
+*** L is flexible
+**** L is chosen to represent whatever observational infomation our postconditions must speak about
+**** Different choices of L e.g. Prop, \sigma \to Prop, etc.
+**** Post is often ~post : \alpha \to L~
+**** W is often ~W \alpha = (\alpha \to L) \to L~ so that ~WP : M \alpha \to (\alpha \to L) \to L~
+*** WP : M \to W is a monad morphism (preserves monadic structure allowing composition)
+*** WP is often an painful, ad-hoc step... the solution?
+
+** Monad algebras
+*** A monad algebra \mu_A : M A \to A
+**** Obeys two laws (commutative diagrams)
+**** Flattening/collapsing of M A to A
+*** A monad algebra at L
+**** Pick an assertion language L that can express postconditions
+**** A value of type M L is a symbolic computation that produces something of type L as a result (postcondition)
+**** Let ~\mu : M L \to L~ (needs manual construction)
+**** The above says: given a computation that would return a postcondition, return the precondition that guarantees that postcondition after running that computation
+*** From \mu to WP
+**** Define ~WP m post = \mu (fmap post m)~
+***** post : \alpha \to L
+***** m : M \alpha
+***** fmap post m : M L
+**** Then WP has the type ~M \alpha \to (\alpha \to L) \to L~ (we have seen this above too)
+*** Drawbacks
+**** \mu : M L \to L is specific to M
+**** It has to be rewritten for each monad M
+**** Real programs mix effects: state + exceptions + nondeterminism
+
+** Monad transformer algebras
+*** Monad transformer T : (Type \to Type) \to (Type \to Type)
+**** Takes a monad (endofunctor Type \to Type) and gives back a monad
+**** Typically encodes a computation with a particular side effect
+*** Example: StateT
+**** ~StateT \sigma M \alpha ≅ \sigma \to M (\alpha \times \sigma)~
+**** ~MaybeT M α ≅ M (Option α)~
+*** Why use monad transformers?
+**** This mimics real programs well, ~StateT \sigma M \alpha : \sigma \to M (\alpha \times \sigma)~
+**** Can reuse the WP machinery we already have for the underlying monad M, rather then re-prove everything from scratch for ~StateT \sigma M~
+**** Can lift monad algebra/WP through transformers
+*** Monad transformer algebra (T, F)
+**** F is an endofunctor (say, Type \to Type)
+**** Here, F will transform base assertion language L into the assertion language F(L) of T M
+**** Example, for StateT, we have ~F(L) = \sigma \to L~
+*** Lifted monad algebra structure F_\mu
+**** F_\mu : T M (F L) \to F L
+**** This gives monad algebra for the transformed monad T M at transformed language F L
+*** How to construct F\mu
+**** Use pattern-match on T and use \mu_M (simple algorithm given in the paper)
+*** Once we have F\mu the WP is then
+**** WP tm post = F\mu (fmap post tm)
+
+** Main idea
+*** Decide assertion language L for our problem
+*** We use monad transformers to encode computations with multiple side effects
+*** Design ~\mu : M L \to L~ and prove algebra laws (needs most manual work)
+*** Define F_\mu for each monad transformer (straightforward and can be mechanized)
+*** Then reuse the existing WP machinery and automate generation of weakest precondition
+*** Compute WP for any ~m : M \alpha~ and ~post : \alpha \to L~ mechanically by evaluating ~\mu (fmap post m)~
+*** Generate verification conditions (VCs): ~pre1 => wp~ and hand off to an SMT solver
+*** Once ~\mu : M L \to L~ is defined in Lean, it can be reused in proofs
+*** Loom also comes with ready-made constructions of monad algebras of some monads like StateM, etc.
