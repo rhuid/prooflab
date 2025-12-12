@@ -1,7 +1,5 @@
 /-
   Metaprogramming monads `TaticM`
-
-  This material is from chapter 8 (Metaprogramming) of Hitchhiker's Guide to Logical Verification
 -/
 
 import Lean

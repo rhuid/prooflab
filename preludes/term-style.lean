@@ -87,3 +87,19 @@ Tactics     vs. term style
 `cases`         `match` or `.elim`
 
 -/
+
+structure InningsStats : Type where
+RS : Nat
+BF : Nat
+NO : Bool
+
+def mylist : List InningsStats :=
+  InningsStats.mk 12 11 False ::
+  InningsStats.mk 3 4 True ::
+  []
+
+def calculateTotalRuns : List InningsStats → Nat
+| [] => 0
+| x :: rest => x.RS + calculateTotalRuns rest
+
+#eval calculateTotalRuns mylist

@@ -141,10 +141,10 @@ theorem And'.left : And' p q → p := by
   cases hpq with
   | intro => assumption                           -- use of unnamed hypotheses
 
-theorem And'.right : And' p q → q := by           -- rewrite this in term mode
-  intro hpq
-  cases hpq with
-  | intro => assumption
+theorem And'.right : And' p q → q :=
+  fun h =>
+  match h with
+  | And'.intro _ hq => hq
 
 -- Now, we can use And'.left and And'.right
 
@@ -153,7 +153,6 @@ example (p q : Prop) : And' p q → And' q p := by
   have hp : p := And'.left  hpq
   have hq : q := And'.right hpq
   exact And'.intro hq hp
-
 
 -- Or'... use two constructors (introduction rules)
 
@@ -182,7 +181,6 @@ example : Exists' Even := by
   apply Exists'.intro 4
   exact even_four
 
-
 -- Let's do XOR operation
 
 inductive Xor' : Prop → Prop → Prop
@@ -207,19 +205,6 @@ example (p q : Prop) : Xor' p q → (p ∧ ¬q) ∨ (¬p ∧ q) := by
   induction hpq with
   | inl hp hnq => exact Or.inl ⟨hp, hnq⟩
   | inr hnp hq => exact Or.inr ⟨hnp, hq⟩
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 -- using repeat'
 -- example : Even 10 ∧ Even 12 ∧ Even 7 ∧ Even 0 := by
@@ -271,20 +256,6 @@ macro "intro_and_even" : tactic =>
 
 example : Even 4 ∧ Even 7 ∧ Even 3 ∧ Even 0 := by
   intro_and_even
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

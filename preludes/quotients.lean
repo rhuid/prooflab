@@ -1,7 +1,9 @@
-
 /- Quotients -/
 
+import Mathlib.Tactic.Linarith
+
 #print Setoid
+#print Equivalence
 
 instance Integer.Setoid : Setoid (Nat × Nat) :=
   { r := fun (a, b) (c, d) => a + d = c + b
@@ -13,8 +15,8 @@ instance Integer.Setoid : Setoid (Nat × Nat) :=
           rw [h]
         trans := by
           intro ⟨a, b⟩ ⟨c, d⟩ ⟨e, f⟩ h1 h2
-          simp at h1 h2 ⊢
-          omega } }
+          simp at h1 h2
+          linarith } }
 
 theorem Integer.Setoid_Iff (x y : Nat × Nat) :
   x ≈ y ↔ x.1 + y.2 = y.1 + x.2 := by rfl
@@ -23,8 +25,6 @@ theorem Integer.Setoid_Iff (x y : Nat × Nat) :
 #print Quotient.mk
 
 def Integer : Type := Quotient Integer.Setoid
-
-notation "⟦" x "⟧" => Quotient.mk Integer.Setoid x
 
 def Integer.zero : Integer := ⟦(0, 0)⟧
 
@@ -46,3 +46,17 @@ def Integer.add : Integer → Integer → Integer :=
       apply Quotient.sound
       rw [Integer.Setoid_Iff] at *
       omega)
+
+def Integer.one : Integer := ⟦(1, 0)⟧
+def Integer.two : Integer := ⟦(2, 0)⟧
+
+example : Integer.add .one .zero = .two := by
+  rw [Integer.add, Integer.one, Integer.zero, Integer.two]
+  simp [*] at *
+  sorry
+
+-- #eval Integer.add .one .zero
+
+instance Fraction.Setoid : Setoid (Int × Int) :=
+  { r := _
+    iseqv := _ }

@@ -125,11 +125,6 @@ example : (¬ ∀ x, p x) ↔ (∃ x, ¬ p x) :=
            h h''))
   (fun ⟨x, hnp⟩ h => absurd (h x) hnp)
 
-example : (∀ x, p x → r) ↔ (∃ x, p x) → r :=
-  Iff.intro
-  (fun h ⟨x, hp⟩ => h x hp)
-  (fun h x hp => h ⟨x, hp⟩)
-
 example (a : α) : (∃ x, p x → r) ↔ (∀ x, p x) → r :=
   Iff.intro
   (fun ⟨x, hpr⟩ hp => hpr (hp x))
@@ -137,7 +132,8 @@ example (a : α) : (∃ x, p x → r) ↔ (∀ x, p x) → r :=
            else have h₁ : ¬ ∀ x, p x := fun hx => hr (h hx)
                 have h₂ : ∃ x, ¬ p x := byContradiction
                                         (fun hnp =>
-                                        have hpx : ∀ x, p x := fun x => by grind
+                                        have hpx : ∀ x, p x := fun x => byContradiction
+                                                                       (fun _  => sorry)
                                         h₁ hpx)
                 match h₂ with
                 | ⟨x, hx⟩ => ⟨x, fun hpx => absurd hpx hx⟩)

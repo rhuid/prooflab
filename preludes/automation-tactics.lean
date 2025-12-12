@@ -133,8 +133,6 @@ example (n : Natural) : n.succ ≠ n := by
   | zero => simp
   | succ k ih => simp [ih]
 
-
-
 -- Typeclasses
 
 class IsCommutative' (α : Type) (f : α → α → α) where
@@ -148,7 +146,5 @@ instance : IsCommutative' Natural Natural.add :=
 
 instance : IsAssociative' Natural Natural.add :=
   { assoc := Natural.add_assoc }
-
-
 
 end

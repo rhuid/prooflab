@@ -1,4 +1,3 @@
-
 /- Subtypes -/
 
 #check Subtype
@@ -28,6 +27,13 @@ def Vector'.neg (v : Vector' Int n) : Vector' Int n :=
   Subtype.mk (List.map Int.neg v.val)
   (by rw [List.length_map]
       exact v.property)
+
+def Vector'.concat (v : Vector' Int n) (v' : Vector' Int m) : Vector' Int (n + m) :=
+  Subtype.mk (v.val ++ v'.val)
+  (by rw [List.length_append]
+      simp [v.property, v'.property])
+
+#eval Vector'.neg someVect
 
 #print List.length_map
 #print Subtype.eq
