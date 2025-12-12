@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Formalization and Verification with Lean</title>
+<meta name="author" content="H. Ronald"/>
+<meta name="description" content=""/>
+<meta name="keywords" content=""/>
+<style type="text/css">
+.underline { text-decoration: underline; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.css"/>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/theme/moon.css" id="theme"/>
+
+
+<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+<script>
+    if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( 'link' );
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = 'https://cdn.jsdelivr.net/npm/reveal.js/css/print/pdf.css';
+        document.getElementsByTagName( 'head' )[0].appendChild( link );
+    }
+</script>
+<link rel="stylesheet" href="reveal-style.css" />
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+<section id="sec-title-slide"><h1 class="title">Formalization and Verification with Lean</h1><p class="subtitle"></p>
+<h2 class="author">H. Ronald</h2><h2 class="date">Nov 28, 2025</h2><p class="date">Created: 2025-11-28 Fri 19:06</p>
+</section>
+<section id="sec-table-of-contents"><div id="table-of-contents" role="doc-toc">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents" role="doc-toc">
+<ul>
+<li><a href="#/slide-org14f089c">1. Introduction</a></li>
+<li><a href="#/slide-orge7ed2f3">2. Theorem Proving</a></li>
+<li><a href="#/slide-org8e1b726">3. Functional Programming</a></li>
+<li><a href="#/slide-org28957d5">4. Automation</a></li>
+<li><a href="#/slide-org23c5741">5. Verification</a></li>
+</ul>
+</div>
+</div>
+</section>
+<section>
+<section id="slide-org14f089c">
+<h2 id="org14f089c"><span class="section-number-2">1.</span> Introduction</h2>
+<div class="outline-text-2" id="text-1">
+</div>
+</section>
+<section id="slide-org113d59c">
+<h3 id="org113d59c"><span class="section-number-3">1.1.</span> Lean</h3>
+<ul>
+<li>Functional programming language</li>
+<li>Theorem prover</li>
+<li>Based on Calculus of inductive constructions (CIC)
+<ul>
+<li>Inductive types + calculus of constructions (CoC)</li>
+
+</ul></li>
+<li>Calculus of constructions
+<ul>
+<li>Higher-order typed lambda calculus</li>
+<li>Curry-Howard</li>
+
+</ul></li>
+<li>Propositions are types, proofs are terms (programs)
+<ul>
+<li>Proving = type checking</li>
+
+</ul></li>
+<li>Lean uses CIC + universe polymorphism</li>
+
+</ul>
+</section>
+<section id="slide-org07a0be4">
+<h3 id="org07a0be4"><span class="section-number-3">1.2.</span> Type theory of Lean</h3>
+<ul>
+<li>Dependent type theory</li>
+<li>Types can depend on values</li>
+
+</ul>
+
+<div class="org-src-container">
+
+<pre  class="src src-lean4"   ><code trim>def divide (x y : Nat) (h : y ≠ 0) : Nat := x / y
+</code></pre>
+</div>
+
+<ul>
+<li>Types can be indexed by runtime values</li>
+
+</ul>
+
+<div class="org-src-container">
+
+<pre  class="src src-lean4"   ><code trim>def head {α : Type} {n : Nat} : Vector α (n + 1) → α
+| ⟨data, h⟩ =&gt; data[0]
+</code></pre>
+</div>
+
+</section>
+<section id="slide-org07a0be4-split">
+<p>
+A dependent type theoretic implementation of the function
+</p>
+
+<p>
+<code>head</code>: [α] → α
+</p>
+
+<div class="org-src-container">
+
+<pre  class="src src-lean4"   ><code trim>inductive NonEmptyList (α : Type) where
+| mk : (xs : List α) → xs ≠ [] → NonEmptyList α
+
+def NonEmptyList.head {α} : NonEmptyList α → α
+| .mk (x :: _) _ =&gt; x
+| .mk [] h =&gt; (h rfl).elim
+</code></pre>
+</div>
+
+<ul>
+<li>Type of the function already guarantees correctness</li>
+<li>Impossible cases are removed by logical reasoning</li>
+<li>No runtime errors</li>
+
+</ul>
+</section>
+</section>
+<section>
+<section id="slide-orge7ed2f3">
+<h2 id="orge7ed2f3"><span class="section-number-2">2.</span> Theorem Proving</h2>
+<ul>
+<li>p &rarr; q is a proposition
+<ul>
+<li>but also a function that takes a term of type p as input and outputs a term of type q</li>
+
+</ul></li>
+<li>Two ways
+<ul>
+<li>Construct lambda terms of the required type</li>
+<li>Tactic mode</li>
+
+</ul></li>
+
+</ul>
+</section>
+<section id="slide-orgdf069de">
+<h3 id="orgdf069de"><span class="section-number-3">2.1.</span> Tactics</h3>
+<ul>
+<li>Two important tactics are <code>intro</code> and <code>apply</code></li>
+<li><code>intro</code> (assume, declaration)
+<ul>
+<li>introduces or brings assumptions in local context</li>
+<li>want to prove p → q → r</li>
+<li>bring proofs of <code>p</code> and <code>q</code> in the local context</li>
+
+</ul></li>
+<li><code>apply</code> (function application)
+<ul>
+<li>want to prove <code>r : Prop</code></li>
+<li>suppose we have the function (constructor) x : a → r</li>
+<li><code>apply x</code> would reduce the goal to proving <code>a</code></li>
+
+</ul></li>
+
+</ul>
+
+</section>
+<section id="slide-orgdf069de-split">
+<ul>
+<li>Local context</li>
+<li>Goal (or goals or subgoals)
+<ul>
+<li>Applying f : p → q → r → s to the goal s will gives us three subgoals p, q and r</li>
+
+</ul></li>
+
+</ul>
+
+<div class="org-src-container">
+
+<pre  class="src src-lean4"   ><code trim>example (P Q : Nat → Prop) : (∃ x, P x ∧ Q x) → ∃ x, Q x ∧ P x := by
+  intro h
+  cases h with
+  | intro k hpq =&gt;
+    cases hpq with
+    | intro hp hq =&gt; constructor ; apply And.intro ; exact hq ; exact hp
+</code></pre>
+</div>
+</section>
+<section id="slide-org143a791">
+<h3 id="org143a791"><span class="section-number-3">2.2.</span> Lambda terms as proofs</h3>
+<ul>
+<li>To prove p → q, we write a lambda term of that type</li>
+<li>Can switch between tactic mode and term mode</li>
+<li>An example below (resolution rule)</li>
+
+</ul>
+
+<div class="org-src-container">
+
+<pre  class="src src-lean4"   ><code trim>example : (p ∨ A) ∧ (¬p ∨ B) → A ∨ B :=
+  fun ⟨ha, hb⟩ =&gt;
+  match ha with
+  | Or.inl hp =&gt;
+    match hb with
+    | Or.inl hnp =&gt; absurd hp hnp
+    | Or.inr h   =&gt; Or.inr h
+  | Or.inr h  =&gt; Or.inl h
+</code></pre>
+</div>
+
+</section>
+<section id="slide-org143a791-split">
+<p>
+Lean also provides tools for working with Classical logic
+</p>
+
+<ul>
+<li>For any proposition <code>p</code>, <code>Classical.em p</code> gives a term of type <code>p ∨ ¬p</code>.</li>
+
+</ul>
+
+<div class="org-src-container">
+
+<pre  class="src src-lean4"   ><code trim>example : ¬(p ∧ ¬q) → (p → q) :=
+  fun h : ¬(p ∧ ¬q) =&gt;
+  fun hp =&gt;
+  Or.elim (Classical.em q)
+  (fun hq  :  q =&gt; hq)
+  (fun hnq : ¬q =&gt; absurd ⟨hp, hnq⟩ h)
+</code></pre>
+</div>
+
+<ul>
+<li><code>if else</code> and Pierce's law</li>
+
+</ul>
+<p>
+Using if else automatically activates Classical.em
+</p>
+
+<div class="org-src-container">
+
+<pre  class="src src-lean4"   ><code trim>example : ((p → q) → p) → p :=
+  fun h =&gt;
+  if hp : p then hp
+  else let hpq : p → q := fun hp' =&gt; absurd hp' hp
+  h hpq
+</code></pre>
+</div>
+</section>
+</section>
+<section>
+<section id="slide-org8e1b726">
+<h2 id="org8e1b726"><span class="section-number-2">3.</span> Functional Programming</h2>
+<div class="outline-text-2" id="text-3">
+</div>
+</section>
+<section id="slide-org64db1ad">
+<h3 id="org64db1ad"><span class="section-number-3">3.1.</span> Inductive types</h3>
+<div class="org-src-container">
+
+<pre  class="src src-lean4"   ><code trim>inductive Even : Nat → Prop
+| zero : Even 0
+| next : ∀ n : Nat, Even n → Even (n + 2)
+</code></pre>
+</div>
+
+<p>
+Inductive types for logical connectives
+</p>
+
+<div class="org-src-container">
+
+<pre  class="src src-lean4"   ><code trim>inductive And' (p q : Prop) : Prop
+| intro : p → q → And' p q
+</code></pre>
+</div>
+
+<div class="org-src-container">
+
+<pre  class="src src-lean4"   ><code trim>inductive Or' : Prop → Prop → Prop
+| inl : p → Or' p q
+| inr : q → Or' p q
+</code></pre>
+</div>
+
+</section>
+<section id="slide-org64db1ad-split">
+<p>
+Inductive definition gives constructors and destructors
+</p>
+
+<ul>
+<li>Use constructors as introduction rules</li>
+<li>Use case analysis on constructors (cases/induction) as elimination rules</li>
+
+</ul>
+
+<p>
+The following are elimination rules for And.
+</p>
+
+<div class="org-src-container">
+
+<pre  class="src src-lean4"   ><code trim>theorem And'.left : And' p q → p := by
+  intro hpq
+  cases hpq with
+  | intro =&gt; assumption                    -- use of unnamed hypotheses
+
+theorem And'.right : And' p q → q := by
+  intro hpq
+  cases hpq with
+  | intro =&gt; assumption
+</code></pre>
+</div>
+
+</section>
+<section id="slide-org64db1ad-split">
+<p>
+A simple example (p ∧ q → q ∧ p):
+</p>
+
+<div class="org-src-container">
+
+<pre  class="src src-lean4"   ><code trim>example (p q : Prop) : And' p q → And' q p := by
+  intro hpq
+  have hp : p := And'.left  hpq
+  have hq : q := And'.right hpq
+  exact And'.intro hq hp
+</code></pre>
+</div>
+
+</section>
+<section id="slide-org64db1ad-split">
+<p>
+Likewise, for existential statements and XOR operations.
+</p>
+
+<div class="org-src-container">
+
+<pre  class="src src-lean4"   ><code trim>inductive Exists' {α : Type} (P : α → Prop) : Prop
+| intro : (a : α) → P a → Exists' P
+
+inductive Xor' : Prop → Prop → Prop
+| inl : p → ¬q → Xor' p q
+| inr : ¬p → q → Xor' p q
+</code></pre>
+</div>
+</section>
+<section id="slide-org6f91418">
+<h3 id="org6f91418"><span class="section-number-3">3.2.</span> Monads</h3>
+<ul>
+<li>Type constructor (Type → Type)</li>
+<li>Two functions
+<ul>
+<li>pure (return, unit)</li>
+<li>bind (join, multiplication)</li>
+
+</ul></li>
+<li>Obeys three laws
+<ul>
+<li>Two identity laws</li>
+<li>Associativity</li>
+
+</ul></li>
+
+</ul>
+
+<div class="org-src-container">
+
+<pre  class="src src-lean4"   ><code trim>class Monad' (m : Type → Type) where
+pure : α → m α
+bind : m α → (α → m β) → m β
+
+class LawfulMonad' (m : Type → Type) extends Monad' m where
+pure_bind (a : α) (f : α → m β) :
+  bind (pure a) f = f a
+bind_pure (ma : m α) :
+  bind ma (pure) = ma
+bind_assoc (f : α → m β) (g : β → m γ) (ma : m α) :
+  bind (bind ma f) g = bind ma (fun a =&gt; bind (f a) g)
+</code></pre>
+</div>
+
+</section>
+<section id="slide-org6f91418-split">
+<p>
+Why monads?
+</p>
+
+<ul>
+<li>Write pure functional programs in imperative style</li>
+<li>All tactics proofs are just monadic operations
+<ul>
+<li>Tactic execution, logging, metavariable manipulation, backtracking, etc. are effectful</li>
+<li>Tactics must fail cleanly (<code>throwError</code>), try alternatives (<code>try</code>, <code>first</code>), brach, backtrack automatically</li>
+
+</ul></li>
+<li>Metaprogramming (we will see soon enough)</li>
+<li>Verification (we will see soon enough)</li>
+
+</ul>
+</section>
+<section id="slide-org575a523">
+<h3 id="org575a523"><span class="section-number-3">3.3.</span> Anatomy of a tactic proof</h3>
+<ul>
+<li><code>MetaM</code>, <code>TacticM</code> monads</li>
+<li>Every tactic execution
+<ul>
+<li>reads environment (<code>Env</code>)</li>
+<li>mutates goal state</li>
+<li>may fail</li>
+<li>may backtrack</li>
+<li>may log messages</li>
+
+</ul></li>
+<li>Monads allows this composition so smoothly</li>
+
+</ul>
+
+</section>
+<section id="slide-org575a523-split">
+<ul>
+<li>Every tactic (e.g., <code>intro</code>, <code>apply</code>, <code>rw</code>, <code>simp</code>) is a function<br />
+TacticState → TacticM TacticState
+<ul>
+<li>reads the current state</li>
+<li>performs an effect (modify goal, intro a binder, etc.)</li>
+<li>returns the new state</li>
+<li>or throws an error</li>
+
+</ul></li>
+
+</ul>
+</section>
+</section>
+<section>
+<section id="slide-org28957d5">
+<h2 id="org28957d5"><span class="section-number-2">4.</span> Automation</h2>
+<ul>
+<li>Built-in tactics
+<ul>
+<li><code>rw</code>, <code>simp</code></li>
+
+</ul></li>
+<li>Tactic combinators
+<ul>
+<li><code>tac_1 &lt;;&gt; tac_2</code></li>
+<li><code>repeat' tac</code></li>
+<li><code>any_goals tac</code></li>
+<li><code>all_goals tac</code></li>
+
+</ul></li>
+<li><code>syntax</code> and <code>macro_rules</code>
+<ul>
+<li>Wrap up a procedure (or a programmed bunch of tactics) into one tactic</li>
+
+</ul></li>
+
+</ul>
+</section>
+<section id="slide-orgd3fc5e2">
+<h3 id="orgd3fc5e2"><span class="section-number-3">4.1.</span> Metaprogramming monads</h3>
+<p>
+<code>MetaM</code>, <code>TacticM</code> are metaprogramming monads
+</p>
+<ul>
+<li>Manipulate goals and local context</li>
+<li>Iterate over local context</li>
+<li>Change goal list, close a goal</li>
+
+</ul>
+
+<p>
+Using the built-in eliminator for AND:
+</p>
+
+<div class="org-src-container">
+
+<pre  class="src src-lean4"   ><code trim>example (h : a ∧ b ∧ c ∧ d) : d := by apply And.right (And.right (And.right h))
+</code></pre>
+</div>
+
+<p>
+With custom tactic <code>destruct_and</code>:
+</p>
+
+<div class="org-src-container">
+
+<pre  class="src src-lean4"   ><code trim>example (h : a ∧ b ∧ c ∧ d) : c := by destruct_and h
+</code></pre>
+</div>
+
+<p>
+Another example is <code>prove_direct</code>.
+</p>
+</section>
+</section>
+<section>
+<section id="slide-org23c5741">
+<h2 id="org23c5741"><span class="section-number-2">5.</span> Verification</h2>
+<ul>
+<li>Monads encode computations (<code>Option</code>, <code>StateM</code>, <code>TacticM</code>)</li>
+<li>A computation or a program can be thought of as a monad (M α)</li>
+<li>Specification monad (W α) specific to a monad M α</li>
+<li>Weakest precondition transformer WP<sub>M</sub> : M &alpha; &rarr; W &alpha;</li>
+<li>W is often chosen to be W α = (α → L) → L</li>
+<li>Then WP : M α → (α → L) → L</li>
+
+</ul>
+</section>
+<section id="slide-org3110419">
+<h3 id="org3110419"><span class="section-number-3">5.1.</span> Loom</h3>
+<ul>
+<li>A framework for automated generation of foundational multi-modal verifiers</li>
+<li>The theoretical basis (in their words, "our main theoretical result") lies in transformer monads and transformer monad algebras</li>
+
+</ul>
+
+</section>
+<section id="slide-org3110419-split">
+<ul>
+<li>M : monad (program)</li>
+<li>L : assertion language (in which we will write preconditions and postconditions)
+<ul>
+<li><code>Prop</code>, σ → Prop</li>
+
+</ul></li>
+<li>μ : M L → L (monad algebra)
+<ul>
+<li>Given a computation that would return a postcondition, return the precondition that guarantees that postcondition after running that computation</li>
+
+</ul></li>
+<li>Define WP m post = μ (fmap post m)
+<ul>
+<li>Recall: post : α → L, m : M α, fmap post m : M L</li>
+
+</ul></li>
+<li>Then WP has the type M α → (α → L) → L</li>
+<li>Then the weakest precondition is given by WP m post</li>
+
+</ul>
+
+</section>
+<section id="slide-org3110419-split">
+<ul>
+<li>Monad transformer
+<ul>
+<li>Takes a monad, gives a monad</li>
+<li>StateT transformer for StateM monad
+<ul>
+<li>StateT σ M α ≅ σ → M (α × σ)</li>
+
+</ul></li>
+<li>MaybeT M α ≅ M (Option α)</li>
+
+</ul></li>
+<li>Why use monad transformers?
+<ul>
+<li>Reuse the WP machinery we already have for the underlying monad M, rather then re-prove everything from scratch for StateT σ M</li>
+<li>Can lift monad algebra/WP through transformers</li>
+
+</ul></li>
+
+</ul>
+
+</section>
+<section id="slide-org3110419-split">
+<ul>
+<li>Monad transformer algebra
+<ul>
+<li>is a pair (T, F)</li>
+<li>F (endofunctor) will transform base assertion language L into the assertion language F(L) of T M
+<ul>
+<li>e.g., for StateT, we have F L = σ → L</li>
+
+</ul></li>
+
+</ul></li>
+<li>Lifted monad algebra
+<ul>
+<li>Fμ : T M (F L) → F L</li>
+<li>Recall: underlying monad algebra μ : M L → L</li>
+
+</ul></li>
+<li>Fμ gives monad algebra for the transformed monad T M at transformed language F L</li>
+<li>How do we construct Fμ?
+<ul>
+<li>Use pattern-match on T and use μ</li>
+
+</ul></li>
+<li>WP tm post = Fμ (fmap post tm)</li>
+
+</ul>
+
+</section>
+<section id="slide-org3110419-split">
+<p>
+How do we implement this for stateful computations?
+</p>
+<ul>
+<li>Decide the assertion language, L = σ → Prop</li>
+<li>Write definition of StateT (involves instantiation of MonadTransformer typeclass)
+<ul>
+<li>F L = σ → L (we saw this before)</li>
+
+</ul></li>
+<li>Design μ : StateM (σ → Prop) → (σ → Prop) (involves proving laws of monad algebra)</li>
+<li>Derive Fμ for StateT (algorithmic)</li>
+<li>Mechanically evaluate WP m post = Fμ (fmap post m)</li>
+<li>Generate verification conditions (VCs): <code>pre1 =&gt; wp</code> and hand off to an SMT solver</li>
+
+</ul>
+</section>
+<section id="slide-orgc954864">
+<h3 id="orgc954864"><span class="section-number-3">5.2.</span> Case Study: Cashmere</h3>
+<ul>
+<li><code>CashmereM</code>
+<ul>
+<li><code>NonDetT (ExceptT String (StateT Bal DivM))</code></li>
+
+</ul></li>
+<li>Bank operations
+<ul>
+<li>Cash withdrawal, deposits, etc.</li>
+
+</ul></li>
+<li>DSL (imperative-style)</li>
+<li><code>require</code>, <code>ensure</code></li>
+
+</ul>
+
+</section>
+<section id="slide-orgc954864-split">
+<p>
+Examples of Cashmere programs
+</p>
+<ul>
+<li>Withdraw an amount</li>
+
+</ul>
+
+<div class="org-src-container">
+
+<pre  class="src src-lean4"   ><code trim>bdef withdraw (amount : Nat) returns (u: Unit)
+  ensures balance + amount = balanceOld do
+  balance := balance - amount
+  return
+
+prove_correct withdraw by
+loom_solve
+</code></pre>
+</div>
+
+</section>
+<section id="slide-orgc954864-split">
+<ul>
+<li>Withdraw session (withdrawing multiple amounts)</li>
+
+</ul>
+
+<div class="org-src-container">
+
+<pre  class="src src-lean4"   ><code trim>open PartialCorrectness DemonicChoice in
+bdef withdrawSession (amounts : List Nat) returns (u: Unit)
+  ensures balance + amounts.sum = balanceOld do
+  let mut tmp := amounts
+  let balancePrev := balance
+  while tmp.nonEmpty
+  invariant balance + amounts.sum = balancePrev + tmp.sum
+  do
+    let amount := tmp.head!
+    balance := balance - amount
+    tmp := tmp.tail
+  return
+
+open PartialCorrectness DemonicChoice in
+prove_correct withdrawSession by
+loom_solve!
+</code></pre>
+</div>
+</section>
+</section>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.js"></script>
+
+<script>
+// Full list of configuration options available here:
+// https://github.com/hakimel/reveal.js#configuration
+Reveal.initialize({
+
+// Optional libraries used to extend on reveal.js
+dependencies: [
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+ { src: 'https://cdn.jsdelivr.net/npm/reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }]
+
+});
+
+</script>
+</body>
+</html>

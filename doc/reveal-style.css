@@ -1,0 +1,11 @@
+/* overall slide background + foreground  */
+
+.reveal .slides section {
+    font-size: 30px !important;
+    line-height: 2;
+}
+
+.reveal .slides section h1,
+.reveal .slides section h2 {
+    font-size: 2.1em !important;
+}
