@@ -1,0 +1,129 @@
+\documentclass[11pt, oneside]{article}
+\usepackage{/home/ronald/gits/tex-craft/spring}
+
+\title{Theorem Proving in Lean}
+\author{Ronald Huidrom}
+\date{Dec 12, 2025}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We look at the Jones polynomial, its construction, applications and generalizations. In particular, we study the braid groups, its representations and arrive at a construction of the Jones polynomial. We discuss proofs of the Tait conjectures. Then we construct Khovanov homology whose graded Euler characteristic is the Jones polynomial.
+\end{abstract}
+
+\vfill
+\tableofcontents
+\vfill
+
+\clearpage
+\section{Introduction}
+
+Consider the following function definition:
+
+\begin{codeblock}
+def divide (x : Nat) (y : Nat) (h : y ≠ 0) := x / y
+\end{codeblock}
+
+This is the usual definition of a division function for natural numbers, except that instead of
+taking two arguments it takes three. By \texttt{x : Nat}, we mean that \texttt{x} is a term having the
+type \texttt{Nat} (the colon annotates the type). The third argument \texttt{h} has the type \texttt{y ≠ 0}.
+This is a proposition and, furthermore, it depends on the value of the term \texttt{y}.
+
+This is an instance of \emph{dependent type theory}, in which types may depend on terms.
+By the Curry--Howard isomorphism and the \emph{propositions-as-types, proofs-as-terms}
+viewpoint, a term of type \texttt{y ≠ 0} is precisely a proof of that proposition. Therefore, the
+function \texttt{divide} can only be evaluated when we supply a proof that \texttt{y} is nonzero as its
+third argument.
+
+A typical evaluation of the function would be:
+
+\begin{codeblock}
+#eval divide 10 2 (by decide)
+\end{codeblock}
+
+Without going into details (which are delegated to later chapters), \texttt{by decide} constructs
+a term of the required type, in this case a proof of $2 \neq 0$.
+
+\bigskip
+
+Now consider the following code:
+
+\begin{codeblock}
+inductive NonEmptyList (α : Type) where
+| mk : (xs : List α) → xs ≠ [] → NonEmptyList α
+\end{codeblock}
+
+The keyword \texttt{inductive} creates an inductive data type named \texttt{NonEmptyList α}.
+Here, $\alpha$ is an arbitrary type (for example, \texttt{String}), in which case
+\texttt{NonEmptyList String} denotes the type of non-empty lists of strings.
+
+This inductive type has a single constructor \texttt{mk}. Outside the definition, it is referred
+to as \texttt{NonEmptyList.mk}, where the dot denotes a namespace (or simply \texttt{.mk} when
+the namespace can be inferred).
+
+This means that there is exactly one way to construct a term of type \texttt{NonEmptyList α},
+namely by using the constructor
+
+\begin{codeblock}
+NonEmptyList.mk : (xs : List α) → xs ≠ [] → NonEmptyList α
+\end{codeblock}
+
+The type of this constructor can be understood as follows: it takes two arguments,
+\begin{itemize}[noitemsep]
+\item a term \texttt{xs} of type \texttt{List α}, and
+\item a term of type \texttt{xs ≠ []},
+\end{itemize}
+and returns a term of type \texttt{NonEmptyList α}.
+
+The second argument is particularly interesting: it requires a proof that the first argument
+\texttt{xs} is non-empty. This is again an instance of dependent type theory, since the type
+\texttt{xs ≠ []} depends on the term \texttt{xs}.
+
+\bigskip
+
+Now consider the following definition:
+
+\begin{codeblock}
+def NonEmptyList.head {α} : NonEmptyList α → α
+| .mk (x :: _) _ => x
+| .mk [] h => (h rfl).elim
+\end{codeblock}
+
+This definition implements the well-known \texttt{head} function. Its type is
+
+\begin{codeblock}
+NonEmptyList α → α
+\end{codeblock}
+
+meaning that it takes a non-empty list of elements of type $\alpha$ and returns an element of
+type $\alpha$.
+
+In the function body, we use pattern matching to destruct the possible cases of a term of type \texttt{NonEmptyList α}.
+Since such a term can only be constructed using its constructor
+(this follows from the inductive definition), the cases listed above are exhaustive.
+
+The first case is when the list has the form \texttt{x :: \_}, in which case $x$ is clearly the first
+element of the list. (The underscore \texttt{\_} acts as a wildcard matching the remainder of the
+list. For example, the list \texttt{[1,2,3]} is written as \texttt{1 :: [2, 3]}.)
+
+The second case considers the empty list \texttt{[]}. However, in this case \texttt{h} is a proof
+that \texttt{[]} is non-empty. Examining the type of \texttt{NonEmptyList.mk} reveals that \texttt{h} has
+type $\texttt{[]} \neq \texttt{[]}$. This proposition is definitionally equal to \texttt{[] = [] → False}.
+Since \texttt{rfl} is a proof of \texttt{[] = []}, the expression \texttt{h rfl} yields a contradiction, that is, a
+term of type \texttt{False}.
+
+The expression \texttt{(h rfl).elim} invokes \texttt{False.elim}, which expresses
+the logical principle that from a contradiction, anything follows. This allows us to construct a
+term of type $\alpha$, thereby convincing Lean that this case is impossible.
+
+\bigskip
+
+All the code discussed above is written in Lean. We have seen that the type of a function can
+already guarantee its correctness: impossible cases are ruled out by logical reasoning. By
+allowing types to depend on runtime values, we eliminate entire classes of runtime errors.
+
+Lean is both a general-purpose functional programming language and an interactive theorem
+prover, based on the calculus of inductive constructions and dependent type theory.
+
+\end{document}
