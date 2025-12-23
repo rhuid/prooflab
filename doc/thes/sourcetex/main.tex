@@ -1,9 +1,9 @@
-\documentclass[11pt, oneside]{article}
+\documentclass[11pt, oneside]{report}
 \usepackage{/home/ronald/gits/tex-craft/spring}
 
-\title{Theorem Proving in Lean}
+\title{A Hoare-logic-based verifier for an imperative DSL}
 \author{Ronald Huidrom}
-\date{Dec 12, 2025}
+\date{Dec 22, 2025}
 
 \begin{document}
 \maketitle
@@ -17,105 +17,105 @@ We look at the Jones polynomial, its construction, applications and generalizati
 \vfill
 
 \clearpage
-\section{Introduction}
+\chapter{Introduction}
 
 Consider the following function definition:
 
-\begin{codeblock}
-def divide (x : Nat) (y : Nat) (h : y ≠ 0) := x / y
-\end{codeblock}
+\begin{leanblock}
+def divide (x : ℕ) (y : ℕ) (h : y ≠ 0) := x / y
+\end{leanblock}
 
 This is the usual definition of a division function for natural numbers, except that instead of
-taking two arguments it takes three. By \texttt{x : Nat}, we mean that \texttt{x} is a term having the
-type \texttt{Nat} (the colon annotates the type). The third argument \texttt{h} has the type \texttt{y ≠ 0}.
-This is a proposition and, furthermore, it depends on the value of the term \texttt{y}.
+taking two arguments it takes three. By \lean{x : ℕ}, we mean that \lean{x} is a term having the
+type \lean{ℕ} (the colon annotates the type). The third argument \lean{h} has the type \lean{y ≠ 0}.
+This is a proposition and, furthermore, it depends on the value of the term \lean{y}.
 
 This is an instance of \emph{dependent type theory}, in which types may depend on terms.
 By the Curry--Howard isomorphism and the \emph{propositions-as-types, proofs-as-terms}
-viewpoint, a term of type \texttt{y ≠ 0} is precisely a proof of that proposition. Therefore, the
-function \texttt{divide} can only be evaluated when we supply a proof that \texttt{y} is nonzero as its
+viewpoint, a term of type \lean{y ≠ 0} is precisely a proof of that proposition. Therefore, the
+function \lean{divide} can only be evaluated when we supply a proof that \lean{y} is nonzero as its
 third argument.
 
 A typical evaluation of the function would be:
 
-\begin{codeblock}
+\begin{leanblock}
 #eval divide 10 2 (by decide)
-\end{codeblock}
+\end{leanblock}
 
-Without going into details (which are delegated to later chapters), \texttt{by decide} constructs
-a term of the required type, in this case a proof of $2 \neq 0$.
+Without going into details (which are delegated to later chapters), \lean{by decide} constructs
+a term of the required type, in this case a proof of \lean{2 ≠ 0}.
 
 \bigskip
 
 Now consider the following code:
 
-\begin{codeblock}
+\begin{leanblock}
 inductive NonEmptyList (α : Type) where
 | mk : (xs : List α) → xs ≠ [] → NonEmptyList α
-\end{codeblock}
+\end{leanblock}
 
-The keyword \texttt{inductive} creates an inductive data type named \texttt{NonEmptyList α}.
-Here, $\alpha$ is an arbitrary type (for example, \texttt{String}), in which case
-\texttt{NonEmptyList String} denotes the type of non-empty lists of strings.
+The keyword \lean{inductive} creates an inductive data type named \lean{NonEmptyList α}.
+Here, \lean{α} is an arbitrary type (for example, \lean{String}), in which case
+\lean{NonEmptyList String} denotes the type of non-empty lists of strings.
 
-This inductive type has a single constructor \texttt{mk}. Outside the definition, it is referred
-to as \texttt{NonEmptyList.mk}, where the dot denotes a namespace (or simply \texttt{.mk} when
+This inductive type has a single constructor \lean{mk}. Outside the definition, it is referred
+to as \lean{NonEmptyList.mk}, where the dot denotes a namespace (or simply \lean{.mk} when
 the namespace can be inferred).
 
-This means that there is exactly one way to construct a term of type \texttt{NonEmptyList α},
+This means that there is exactly one way to construct a term of type \lean{NonEmptyList α},
 namely by using the constructor
 
-\begin{codeblock}
+\begin{leanblock}
 NonEmptyList.mk : (xs : List α) → xs ≠ [] → NonEmptyList α
-\end{codeblock}
+\end{leanblock}
 
 The type of this constructor can be understood as follows: it takes two arguments,
 \begin{itemize}[noitemsep]
-\item a term \texttt{xs} of type \texttt{List α}, and
-\item a term of type \texttt{xs ≠ []},
+\item a term \lean{xs} of type \lean{List α}, and
+\item a term of type \lean{xs ≠ []},
 \end{itemize}
-and returns a term of type \texttt{NonEmptyList α}.
+and returns a term of type \lean{NonEmptyList α}.
 
 The second argument is particularly interesting: it requires a proof that the first argument
-\texttt{xs} is non-empty. This is again an instance of dependent type theory, since the type
-\texttt{xs ≠ []} depends on the term \texttt{xs}.
+\lean{xs} is non-empty. This is again an instance of dependent type theory, since the type
+\lean{xs ≠ []} depends on the term \lean{xs}.
 
 \bigskip
 
 Now consider the following definition:
 
-\begin{codeblock}
+\begin{leanblock}
 def NonEmptyList.head {α} : NonEmptyList α → α
 | .mk (x :: _) _ => x
 | .mk [] h => (h rfl).elim
-\end{codeblock}
+\end{leanblock}
 
-This definition implements the well-known \texttt{head} function. Its type is
+This definition implements the well-known \lean{head} function. Its type is
 
-\begin{codeblock}
+\begin{leanblock}
 NonEmptyList α → α
-\end{codeblock}
+\end{leanblock}
 
-meaning that it takes a non-empty list of elements of type $\alpha$ and returns an element of
-type $\alpha$.
+meaning that it takes a non-empty list of elements of type \lean{α} and returns an element of
+type \lean{α}.
 
-In the function body, we use pattern matching to destruct the possible cases of a term of type \texttt{NonEmptyList α}.
+In the function body, we use pattern matching to destruct the possible cases of a term of type \lean{NonEmptyList α}.
 Since such a term can only be constructed using its constructor
 (this follows from the inductive definition), the cases listed above are exhaustive.
 
-The first case is when the list has the form \texttt{x :: \_}, in which case $x$ is clearly the first
-element of the list. (The underscore \texttt{\_} acts as a wildcard matching the remainder of the
-list. For example, the list \texttt{[1,2,3]} is written as \texttt{1 :: [2, 3]}.)
+The first case is when the list has the form \lean{x :: _}, in which case \lean{x} is clearly the first
+element of the list. (The underscore \lean{_} acts as a wildcard matching the remainder of the
+list. For example, the list \lean{[1,2,3]} is written as \lean{1 :: [2, 3]}.)
 
-The second case considers the empty list \texttt{[]}. However, in this case \texttt{h} is a proof
-that \texttt{[]} is non-empty. Examining the type of \texttt{NonEmptyList.mk} reveals that \texttt{h} has
-type $\texttt{[]} \neq \texttt{[]}$. This proposition is definitionally equal to \texttt{[] = [] → False}.
-Since \texttt{rfl} is a proof of \texttt{[] = []}, the expression \texttt{h rfl} yields a contradiction, that is, a
-term of type \texttt{False}.
+The second case considers the empty list \lean{[]}. However, in this case \lean{h} is a proof
+that \lean{[]} is non-empty. Examining the type of \lean{NonEmptyList.mk} reveals that \lean{h} has
+type \lean{[] ≠ []}. This proposition is definitionally equal to \lean{[] = [] → False}.
+Since \lean{rfl} is a proof of \lean{[] = []}, the expression \lean{h rfl} yields a contradiction, that is, a
+term of type \lean{False}.
 
-The expression \texttt{(h rfl).elim} invokes \texttt{False.elim}, which expresses
+The expression \lean{(h rfl).elim} invokes \lean{False.elim}, which expresses
 the logical principle that from a contradiction, anything follows. This allows us to construct a
-term of type $\alpha$, thereby convincing Lean that this case is impossible.
+term of type \lean{α}, thereby convincing Lean that this case is impossible.
 
 \bigskip
 
@@ -125,5 +125,58 @@ allowing types to depend on runtime values, we eliminate entire classes of runti
 
 Lean is both a general-purpose functional programming language and an interactive theorem
 prover, based on the calculus of inductive constructions and dependent type theory.
+
+\clearpage
+
+\section{Introduction}
+
+Consider the following function definition:
+
+\begin{leanblock}
+def divide (x : ℕ) (y : ℕ) (h : y ≠ 0) := x / y
+\end{leanblock}
+
+The declaration above is the usual integer division operation on natural numbers, except that the function takes an additional \emph{proof} argument. By \lean{x : ℕ} we mean that \lean{x} is a term of type \lean{ℕ}; the third parameter \lean{h} has type \lean{y ≠ 0}, a proposition that depends on the value of \lean{y}. In other words, the function is not just \emph{typed} but \emph{indexed} by a proposition: it is a dependent function.
+
+Under the Curry–Howard correspondence (propositions-as-types, proofs-as-terms), a term of type \lean{y ≠ 0} is exactly a witness (a proof) that \lean{y} is nonzero. Thus \lean{divide} can only be applied when the caller supplies such a witness. For example:
+
+\begin{leanblock}
+#eval divide 10 2 (by decide)
+\end{leanblock}
+
+Here \lean{by decide} constructs the required proof term (a certificate that \lean{2 ≠ 0}), and the evaluation proceeds without any runtime check.
+
+\bigskip
+
+Now consider this inductive type:
+
+\begin{leanblock}
+inductive NonEmptyList (α : Type) where
+| mk : (xs : List α) → xs ≠ [] → NonEmptyList α
+\end{leanblock}
+
+The \lean{inductive} declaration defines \lean{NonEmptyList α} as the type of non-empty lists over \lean{α}. Its single constructor, \lean{NonEmptyList.mk}, has the dependent type
+\begin{leanblock}
+NonEmptyList.mk : (xs : List α) → xs ≠ [] → NonEmptyList α
+\end{leanblock}
+which reads: given a list \lean{xs : List α} and a proof of \lean{xs ≠ []}, construct an element of \lean{NonEmptyList α}. The second argument is a \emph{proof obligation} that enforces the invariant ``the list is not empty'' at the type level.
+
+We can now implement a safe head projection:
+
+\begin{leanblock}
+def NonEmptyList.head {α} : NonEmptyList α → α
+| .mk (x :: _) _ => x
+| .mk [] h => (h rfl).elim
+\end{leanblock}
+
+The pattern match is exhaustive because every \lean{NonEmptyList α} is built with \lean{.mk}. In the first clause the payload has the form \lean{x :: _} and we return the head \lean{x}. The second clause is logically impossible: it matches the empty list \lean{[]} while \lean{h} is a proof of \lean{[] ≠ []}. Applying \lean{h} to \lean{rfl} (the canonical proof of judgmental equality \lean{[] = []}) yields a term of type \lean{False}; invoking \lean{(h rfl).elim} eliminates the contradiction (by \lean{False.elim}) and thus produces a term of the expected return type. In short, the impossible branch is discharged by logical contradiction rather than by a runtime error.
+
+\bigskip
+
+These examples illustrate a central design point of dependent-type proof assistants: invariants that would otherwise require runtime checks are encoded in the type system and discharged by supplying proof terms. By making propositions first-class and allowing types to depend on terms, Lean (based on the Calculus of Inductive Constructions) moves many correctness obligations from runtime into the type checker. The payoff is strong: programs and proofs can be composed so that certain classes of runtime failures are provably impossible.
+
+\chapter{Background}
+\chapter{Lezu: An Imperative DSL}
+\chapter{Hoare Logic}
 
 \end{document}
