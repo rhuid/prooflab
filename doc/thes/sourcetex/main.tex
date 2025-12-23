@@ -9,7 +9,7 @@
 \maketitle
 
 \begin{abstract}
-We look at the Jones polynomial, its construction, applications and generalizations. In particular, we study the braid groups, its representations and arrive at a construction of the Jones polynomial. We discuss proofs of the Tait conjectures. Then we construct Khovanov homology whose graded Euler characteristic is the Jones polynomial.
+We design an imperative language and a mechanized Hoare-logic-based verifier for the same. The design is implemented and proved sound in Lean theorem prover. Then we present some verified case studies.
 \end{abstract}
 
 \vfill
@@ -175,8 +175,49 @@ The pattern match is exhaustive because every \lean{NonEmptyList α} is built wi
 
 These examples illustrate a central design point of dependent-type proof assistants: invariants that would otherwise require runtime checks are encoded in the type system and discharged by supplying proof terms. By making propositions first-class and allowing types to depend on terms, Lean (based on the Calculus of Inductive Constructions) moves many correctness obligations from runtime into the type checker. The payoff is strong: programs and proofs can be composed so that certain classes of runtime failures are provably impossible.
 
-\chapter{Background}
-\chapter{Lezu: An Imperative DSL}
-\chapter{Hoare Logic}
+% \chapter{Background}
+\chapter{The Imperative DSL}
+
+We design a minimal imperative language sufficient to express classical algorithms such as binary search. The language is intentionally small, allowing us to focus on the logical foundations of verification rather than engineering concerns.
+
+\begin{leanblock}
+/-- A function that evaluates arithmetic expressions -/
+def AExp.eval : AExp → State → Int
+| .const n, _ => n
+| .var x, s => s x
+| .add e₁ e₂, s => e₁.eval s + e₂.eval s
+| .sub e₁ e₂, s => e₁.eval s - e₂.eval s
+| .mul e₁ e₂, s => e₁.eval s * e₂.eval s
+\end{leanblock}
+
+
+\begin{leanblock}
+def BExp.eval : BExp → State → Prop
+| .tt, _ => True
+| .ff, _ => False
+| .eq e₁ e₂, s => e₁.eval s = e₂.eval s
+| .le e₁ e₂, s => e₁.eval s ≤ e₂.eval s
+| .not b, s => ¬ b.eval s
+| .and b₁ b₂, s => b₁.eval s ∧ b₂.eval s
+\end{leanblock}
+
+
+\begin{leanblock}
+inductive Cmd
+| skip
+| assign (x : Var) (e : AExp)
+| seq    (c₁ c₂ : Cmd)
+| ite    (b : BExp) (ct ce : Cmd)
+| while  (b : BExp) (I : Assertion) (c : Cmd)
+\end{leanblock}
+
+
+
+
+
+
+% \chapter{Hoare Logic}
+
+The verification condition generator is implemented as a structurally recursive function over the abstract syntax of the language, entirely within Lean’s definitional fragment, without the use of metaprogramming.
 
 \end{document}
