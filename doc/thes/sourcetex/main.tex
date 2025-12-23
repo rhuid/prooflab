@@ -211,13 +211,19 @@ inductive Cmd
 | while  (b : BExp) (I : Assertion) (c : Cmd)
 \end{leanblock}
 
-
-
-
-
-
 % \chapter{Hoare Logic}
 
 The verification condition generator is implemented as a structurally recursive function over the abstract syntax of the language, entirely within Lean’s definitional fragment, without the use of metaprogramming.
+
+\begin{leanblock}
+inductive Exec : Cmd → State → State → Prop
+| skip : Exec .skip s s
+| assign : Exec (.assign x e) s (s.update x (e.eval s))
+| seq : Exec c₁ s s' → Exec c₂ s' s'' → Exec (.seq c₁ c₂) s s''
+| ite_true : b.eval s → Exec ct s s' → Exec (.ite b ct ce) s s'
+| ite_false : ¬ b.eval s → Exec ce s s' → Exec (.ite b ct ce) s s'
+| while_false : ¬ b.eval s → Exec (.while b I c) s s
+| while_true : b.eval s → Exec c s s' → Exec (.while b I c) s' s'' → Exec (.while b I c) s s''
+\end{leanblock}
 
 \end{document}
