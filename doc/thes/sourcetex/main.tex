@@ -180,50 +180,247 @@ These examples illustrate a central design point of dependent-type proof assista
 
 We design a minimal imperative language sufficient to express classical algorithms such as binary search. The language is intentionally small, allowing us to focus on the logical foundations of verification rather than engineering concerns.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%% Some text here %%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% \begin{leanblock}
+% /-- A function that evaluates arithmetic expressions -/
+% def AExp.eval : AExp → State → Int
+% | .const n, _ => n
+% | .var x, s => s x
+% | .add e₁ e₂, s => e₁.eval s + e₂.eval s
+% | .sub e₁ e₂, s => e₁.eval s - e₂.eval s
+% | .mul e₁ e₂, s => e₁.eval s * e₂.eval s
+% \end{leanblock}
+
+% \begin{leanblock}
+% def BExp.eval : BExp → State → Prop
+% | .tt, _ => True
+% | .ff, _ => False
+% | .eq e₁ e₂, s => e₁.eval s = e₂.eval s
+% | .le e₁ e₂, s => e₁.eval s ≤ e₂.eval s
+% | .not b, s => ¬ b.eval s
+% | .and b₁ b₂, s => b₁.eval s ∧ b₂.eval s
+% \end{leanblock}
+
+% \begin{leanblock}
+% inductive Cmd
+% | skip
+% | assign (x : Var) (e : AExp)
+% | seq    (c₁ c₂ : Cmd)
+% | ite    (b : BExp) (ct ce : Cmd)
+% | while  (b : BExp) (I : Assertion) (c : Cmd)
+% \end{leanblock}
+
+\section{Operational semantics}
+
+\subsection{Big-step (natural) operational semantics}
+
+We adopt a \emph{big-step} (also called \emph{natural}) operational semantics for our imperative DSL.  Intuitively, a big-step judgment
+\[
+\langle c, s\rangle \Downarrow s'
+\]
+asserts that executing command \(c\) in initial state \(s\) \emph{terminates} and produces final state \(s'\).  The big-step semantics is given by a small collection of inference rules (one rule per syntactic form); each rule is a specification of how one execution step (or one inference of a case) yields a final state.  In contrast to small-step semantics, the big-step form directly relates whole computations to their results and thus is particularly convenient when proving partial-correctness properties (such as soundness of Hoare logic) and when constructing verification condition generators.
+
+Below we present the operational rules in standard inference–rule form.  For clarity we write states as \(s, s', s''\), commands as \(c, c_1, c_2\), and use the notation \(\langle c, s\rangle \Downarrow s'\) for the big-step relation.
+
+\medskip
+\noindent\textbf{Inference rules (big-step).}
+
+\medskip
+\noindent\textbf{(skip)}\quad The \(\texttt{skip}\) command does nothing.
+\[
+\AxiomC{}
+\UnaryInfC{\(\langle \texttt{skip}, s\rangle \Downarrow s\)}
+\DisplayProof
+\]
+
+\medskip
+\noindent\textbf{(assign)}\quad Assignment updates the state at the named variable with the value of the expression.
+\[
+\AxiomC{}
+\UnaryInfC{\(\langle x := e, s\rangle \Downarrow s[x \mapsto \mathsf{eval}(e,s)]\)}
+\DisplayProof
+\]
+
+\medskip
+\noindent\textbf{(seq)}\quad Sequential composition executes the first command to an intermediate state and then the second.
+\[
+\AxiomC{\(\langle c_1, s\rangle \Downarrow s'\)}
+\AxiomC{\(\langle c_2, s'\rangle \Downarrow s''\)}
+\BinaryInfC{\(\langle c_1; c_2, s\rangle \Downarrow s''\)}
+\DisplayProof
+\]
+
+\medskip
+\noindent\textbf{(if\_true)}\quad If the condition holds, execute the then-branch.
+\[
+\AxiomC{\(\mathsf{evalB}(b,s)\)}
+\AxiomC{\(\langle c_{\mathit{then}}, s\rangle \Downarrow s'\)}
+\BinaryInfC{\(\langle \texttt{if } b \texttt{ then } c_{\mathit{then}} \texttt{ else } c_{\mathit{else}}, s\rangle \Downarrow s'\)}
+\DisplayProof
+\]
+
+\medskip
+\noindent\textbf{(if\_false)}\quad Otherwise, execute the else-branch.
+\[
+\AxiomC{\(\neg \mathsf{evalB}(b,s)\)}
+\AxiomC{\(\langle c_{\mathit{else}}, s\rangle \Downarrow s'\)}
+\BinaryInfC{\(\langle \texttt{if } b \texttt{ then } c_{\mathit{then}} \texttt{ else } c_{\mathit{else}}, s\rangle \Downarrow s'\)}
+\DisplayProof
+\]
+
+\medskip
+\noindent\textbf{(while\_false)}\quad If the loop guard is false initially, the loop terminates immediately.
+\[
+\AxiomC{\(\neg\mathsf{evalB}(b,s)\)}
+\UnaryInfC{\(\langle \texttt{while } b \texttt{ do } c, s\rangle \Downarrow s\)}
+\DisplayProof
+\]
+
+\medskip
+\noindent\textbf{(while\_true)}\quad If the guard is true, execute one iteration and continue.
+\[
+\AxiomC{\(\mathsf{evalB}(b,s)\)}
+\AxiomC{\(\langle c, s\rangle \Downarrow s'\)}
+\AxiomC{\(\langle \texttt{while } b \texttt{ do } c, s'\rangle \Downarrow s''\)}
+\TrinaryInfC{\(\langle \texttt{while } b \texttt{ do } c, s\rangle \Downarrow s''\)}
+\DisplayProof
+\]
+
+\bigskip
+
+The rules above are the standard natural semantics for the command language: they are \emph{compositional} (the conclusion of a rule is determined from the conclusions of its premises) and they explicitly witness termination.  In particular, the \textbf{while\_true} rule unrolls one iteration of the loop and then recurses, so a proof of a loop execution is finite precisely when the loop terminates; non-terminating executions produce no finite derivation and therefore no judgment \(\langle c, s\rangle \Downarrow s'\).
+
+\subsection{The Lean representation: the inductive relation \lean{Exec}}
+
+In the formal development we encode the above semantics as an inductive relation in Lean named \lean{Exec}.  The relation has the (dependent) type
 \begin{leanblock}
-/-- A function that evaluates arithmetic expressions -/
-def AExp.eval : AExp → State → Int
-| .const n, _ => n
-| .var x, s => s x
-| .add e₁ e₂, s => e₁.eval s + e₂.eval s
-| .sub e₁ e₂, s => e₁.eval s - e₂.eval s
-| .mul e₁ e₂, s => e₁.eval s * e₂.eval s
+Exec : Cmd → State → State → Prop
 \end{leanblock}
 
+so that a value (term) of type \lean{Exec c s s'} is a formal derivation witnessing \(\langle c, s\rangle \Downarrow s'\).
+
+Below is the Lean declaration:
 
 \begin{leanblock}
-def BExp.eval : BExp → State → Prop
-| .tt, _ => True
-| .ff, _ => False
-| .eq e₁ e₂, s => e₁.eval s = e₂.eval s
-| .le e₁ e₂, s => e₁.eval s ≤ e₂.eval s
-| .not b, s => ¬ b.eval s
-| .and b₁ b₂, s => b₁.eval s ∧ b₂.eval s
+inductive Exec : Cmd → State → State → Prop
+| skip : Exec Cmd.skip s s
+| assign : Exec (Cmd.assign x e) s (s.update x (e.eval s))
+| seq : Exec c₁ s s' → Exec c₂ s' s'' → Exec (Cmd.seq c₁ c₂) s s''
+| ite_true : b.eval s → Exec ct s s' → Exec (Cmd.ite b ct ce) s s'
+| ite_false : ¬ b.eval s → Exec ce s s' → Exec (Cmd.ite b ct ce) s s'
+| while_false : ¬ b.eval s → Exec (Cmd.while b I c) s s
+| while_true : b.eval s → Exec c s s' → Exec (Cmd.while b I c) s' s'' →
+               Exec (Cmd.while b I c) s s''
 \end{leanblock}
 
+\subsection{How to build \lean{Exec} terms}
+
+Each constructor of \lean{Exec} corresponds exactly to one of the inference rules above.  A proof object of type \lean{Exec c s s'} is a finite tree whose internal nodes are applications of constructors and whose leaves are applications of leaf constructors (e.g., \lean{skip} and \lean{assign}).  We now describe the constructors and how to form terms in practice.
+
+\begin{description} [leftmargin=1.6cm,noitemsep]
+\item[\textbf{\lean{skip}.}] The constructor \lean{Exec.skip} (named \lean{skip} in the inductive block) is a leaf constructor.  For any state \lean{s} the term \lean{Exec.skip} inhabits \lean{Exec Cmd.skip s s}.  Thus the trivial derivation \(\langle\texttt{skip},s\rangle\Downarrow s\) is witnessed by the canonical term \lean{Exec.skip}.
+
+\item[\textbf{\lean{assign}.}] The assignment constructor is also a leaf: to prove \lean{Exec (Cmd.assign x e) s s'}, the constructor requires that \lean{s' = s.update x (e.eval s)}.  Concretely, for any state \lean{s} the term \lean{Exec.assign} is a witness of
+\begin{leanblock}
+Exec (Cmd.assign x e) s (s.update x (e.eval s))
+\end{leanblock}
+
+No additional premises are needed because the evaluation of the right-hand expression \(\mathsf{eval}(e,s)\) is computed meta-level (by the definitional evaluator \lean{e.eval s}).
+
+\item[\textbf{\lean{seq}.}] The sequential composition constructor is \emph{binary} and nontrivial. If we have:
+\begin{center}
+\lean{h_1 : Exec c₁ s s'} and \lean{h_2 : Exec c₂ s' s''}
+\end{center}
+then the term \lean{Exec.seq h_1 h_2} has type
 
 \begin{leanblock}
-inductive Cmd
-| skip
-| assign (x : Var) (e : AExp)
-| seq    (c₁ c₂ : Cmd)
-| ite    (b : BExp) (ct ce : Cmd)
-| while  (b : BExp) (I : Assertion) (c : Cmd)
+Exec (Cmd.seq c₁ c₂) s s''
 \end{leanblock}
+
+Thus, to build a proof that a sequence terminates in state \lean{s''}, we must provide a proof for the first component reaching an intermediate state \lean{s'} and a proof that the second component reaches \lean{s''} from \lean{s'}.
+
+\item[\textbf{\lean{ite_true} / \lean{ite_false}.}] Conditionals have two constructors corresponding to the two branches.  To construct a term of type \lean{Exec (Cmd.ite b ct ce) s s'} in the \emph{true} case we must provide:
+\begin{center}
+\lean{hb : b.eval s} and \lean{ht : Exec ct s s'}.
+\end{center}
+Then \lean{Exec.ite_true hb ht} is a witness of the execution along the then-branch. The false case is analogous and uses \lean{Exec.ite_false}.
+
+\item[\textbf{\lean{while_false}.}] If the guard is false in the starting state, then the loop terminates immediately and the constructor \lean{Exec.while_false} (given a proof of \(\neg b.eval\ s\)) builds a term of type \lean{Exec (Cmd.while b I c) s s}.
+
+\item[\textbf{\lean{while_true}.}] The \lean{while_true} constructor implements one unrolling of the loop. To construct a witness of type
+
+\begin{leanblock}
+Exec (Cmd.while b I c) s s''
+\end{leanblock}
+
+we must provide:
+\begin{enumerate}[noitemsep]
+  \item a proof \lean{hb : b.eval s} that the guard holds at the current state,
+  \item a proof \lean{hbody : Exec c s s'} that one iteration executes from \lean{s} to \lean{s'}, and
+  \item a proof \lean{hrest : Exec (Cmd.while b I c) s' s''} that the remainder of the loop executes from \lean{s'} to \lean{s''}.
+\end{enumerate}
+One then forms \lean{Exec.while_true hb hbody hrest}. Because the final premise is itself an \lean{Exec} judgment, proofs of loop executions are nested finite trees that correspond to successive unrollings.  A complete derivation is finite exactly when the loop terminates in a finite number of iterations.
+\end{description}
+
+\subsection{Key meta-properties and remarks}
+
+\begin{enumerate}[leftmargin=1.2cm]
+\item \textbf{Derivations are finite trees.} Since \lean{Exec} is declared \emph{inductively}, every inhabitant (proof term) is a finite, well-founded tree built from the constructors.  This enforces the standard semantic reading: \emph{a big-step derivation exists precisely when the program terminates}; nonterminating computations have no finite \lean{Exec} witness.
+
+\item \textbf{Not recursion in the proof-theoretic sense.} Although several constructors (notably \lean{seq} and \lean{while_true}) mention \lean{Exec} in their premises, this is inductive recursion — not unrestricted recursion — and Lean checks that the definition is well-formed.  Inductive definitions produce the least fixed point; hence all constructed proofs are finite by construction.
+
+\item \textbf{Constructing proofs vs. running programs.} A term of type \lean{Exec c s s'} is a \emph{certificate} (derivation) rather than an imperative execution performed by the Lean VM.  When the program consists of pure assignments and conditionals evaluated by definitional evaluation of subexpressions, the premises used in constructors will often be inhabited by canonical constructors (e.g., \lean{Exec.assign}) without additional work; however, for loops a proof requires exhibiting a finite sequence of iterations (or a loop invariant if reasoning by Hoare logic).
+
+\item \textbf{Partial correctness and Hoare triples.} The big-step relation provides the semantic basis for partial correctness.  We define the semantic Hoare triple by
+\[
+\{P\}\ c\ \{Q\}\quad\stackrel{\mathsf{def}}{\iff}\quad
+\forall s\, s',\ \langle c, s\rangle \Downarrow s' \ \wedge\ P(s)\ \Rightarrow\ Q(s').
+\]
+In Lean notation this is written directly as:
+\begin{leanblock}
+def Hoare (P : Assertion) (c : Cmd) (Q : Assertion) : Prop :=
+  ∀ s s', Exec c s s' → P s → Q s'
+\end{leanblock}
+Soundness of a proof system (e.g. Hoare rules) or of a verification condition generator is proved with respect to this semantic definition.
+
+\item \textbf{Determinism (optional remark).} For typical deterministic expression evaluation and the rules above, the big-step relation is deterministic: if \(\langle c, s\rangle \Downarrow s_1\) and \(\langle c, s\rangle \Downarrow s_2\) then \(s_1 = s_2\).  Determinism is convenient for equational reasoning and can be proved by induction on derivations; it is not strictly required for the verification machinery, but it simplifies many meta-proofs.
+
+\item \textbf{Proof engineering.} In practice, one seldom constructs large \lean{Exec} trees by hand; instead, we either:
+  \begin{itemize}[noitemsep]
+  \item reason about them abstractly using induction on derivations, or
+  \item avoid explicit derivations by using a verification condition generator (VCG) whose correctness is proved against the \lean{Exec} relation.
+  \end{itemize}
+  The VCG produces logical obligations (assertions) that imply the existence of an \lean{Exec} derivation; thus the VCG plus discharged obligations yields a semantic guarantee \`a la the Hoare triple above.
+\end{enumerate}
+
+\subsection{A short concrete construction example}
+
+Consider the trivial program that performs two assignments in sequence:
+\begin{leanblock}
+def c1 : Cmd := Cmd.assign "x" (AExp.const 1)
+def c2 : Cmd := Cmd.assign "y" (AExp.const 2)
+def prog : Cmd := Cmd.seq c1 c2
+\end{leanblock}
+
+Let \lean{s} be an arbitrary state and define \lean{s1 := s.update "x" 1} and \lean{s2 := s1.update "y" 2}.  Then we obtain the following concrete derivation terms:
+
+\begin{leanblock}
+# let h1 : Exec c1 s s1 := Exec.assign
+# let h2 : Exec c2 s1 s2 := Exec.assign
+# let hprog : Exec prog s s2 := Exec.seq h1 h2
+\end{leanblock}
+
+In words: both assignments are leaf derivations (inhabited by \lean{Exec.assign}); composing them with \lean{Exec.seq} yields a derivation of the full sequence.
+
+\bigskip
+
+\noindent\textbf{Concluding remark.} The inductive relation \lean{Exec} and its finite derivations give a transparent, machine-checkable account of terminating executions.  It is the semantic backbone for correctness statements and for proving soundness of the verification infrastructure (VCG or Hoare proof system) that we build on top of the DSL.
 
 % \chapter{Hoare Logic}
 
 The verification condition generator is implemented as a structurally recursive function over the abstract syntax of the language, entirely within Lean’s definitional fragment, without the use of metaprogramming.
-
-\begin{leanblock}
-inductive Exec : Cmd → State → State → Prop
-| skip : Exec .skip s s
-| assign : Exec (.assign x e) s (s.update x (e.eval s))
-| seq : Exec c₁ s s' → Exec c₂ s' s'' → Exec (.seq c₁ c₂) s s''
-| ite_true : b.eval s → Exec ct s s' → Exec (.ite b ct ce) s s'
-| ite_false : ¬ b.eval s → Exec ce s s' → Exec (.ite b ct ce) s s'
-| while_false : ¬ b.eval s → Exec (.while b I c) s s
-| while_true : b.eval s → Exec c s s' → Exec (.while b I c) s' s'' → Exec (.while b I c) s s''
-\end{leanblock}
 
 \end{document}
